@@ -43,6 +43,7 @@
     "config": "^3.3.7",
     "convict": "^6.2.3",
     "js-yaml": "^4.1.0",
+    "near-api-js": "^0.44.2",
     "node-fetch": "^3.2.4",
     "pino": "^7.11.0",
     "pino-pretty": "^7.6.1",
