@@ -97,10 +97,10 @@ export function calculateGridOrders(
   const levelsStep = config.get('grid.levels_step');
   const sizeReversal = config.get('grid.size_reversal');
 
-  const halfSpread = spread / 10 / 2;
-
   const priceFixedRate = (tickSize + '').split('.')[1].length;
   const sizeFixedRate = (stepSize + '').split('.')[1].length;
+
+  const halfSpread = (currentPrice / 100) * (spread / 2);
 
   const reversalPoints = {
     1: { x: 1, y: 1 + sizeReversal },

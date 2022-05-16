@@ -15,6 +15,7 @@ export class RefPricer {
   private quoteToken: string;
   private baseDecimals: number;
   private quoteDecimals: number;
+  private nearConfig: nearApi.ConnectConfig;
 
   constructor() {
     this.price = 0;
@@ -25,18 +26,19 @@ export class RefPricer {
     this.quoteToken = '';
     this.baseDecimals = 0;
     this.quoteDecimals = 0;
-  }
-
-  async init(): Promise<void> {
-    this.poolId = +config.get('price.source_ticker');
-
-    this.near = await nearApi.connect({
+    this.nearConfig = {
       networkId: 'mainnet',
       nodeUrl: 'https://rpc.mainnet.near.org',
       walletUrl: 'http://wallet.near.org',
       keyStore: new nearApi.keyStores.InMemoryKeyStore(),
       headers: {},
-    });
+    };
+  }
+
+  async init(): Promise<void> {
+    this.poolId = +config.get('price.source_ticker');
+
+    this.near = await nearApi.connect(this.nearConfig);
 
     this.account = await this.near.account('near.near');
     logger.info(`Connected to Ref.Finance — #${this.poolId} pool`);
