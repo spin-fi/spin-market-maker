@@ -96,8 +96,10 @@ export function calculateGridOrders(
     );
   }
 
-  const priceFixedRate = (tickSize + '').split('.')[1].length;
-  const sizeFixedRate = (stepSize + '').split('.')[1].length;
+  const priceFixedRate =
+    tickSize === 1 ? 0 : (tickSize + '').split('.')[1].length;
+  const sizeFixedRate =
+    stepSize === 1 ? 0 : (stepSize + '').split('.')[1].length;
 
   const halfSpread = (currentPrice / 100) * (spread / 2);
 

@@ -5,7 +5,7 @@ const logger = pino(
   pretty({
     colorize: true,
     translateTime: true,
-    ignore: 'pid, hostname',
+    ignore: 'pid,hostname',
   }),
 );
 
