@@ -4,7 +4,7 @@ x-app-service: &default-app
   build: .
   command: main.js
   volumes:
-    - config:/usr/app/config
+    - './config:/usr/app/config'
   restart: on-failure
   environment:
     CONFIG_FILE: default.json
@@ -20,6 +20,3 @@ services:
     container_name: 'example_name'
     environment:
       CONFIG_FILE: example.json
-
-volumes:
-  config:

@@ -10,7 +10,8 @@ process.on('unhandledRejection', (err) => {
 const bootstrap = async () => {
   const configFile = process.env.CONFIG_FILE || 'default.json';
   try {
-    logger.info('Starting application');
+    logger.info(`Starting application. Loading ${configFile} config`);
+
     // Load configuration
     config.loadFile(`./config/${configFile}`);
 
@@ -31,7 +32,7 @@ bootstrap().catch(() => {
   process.exit(1);
 });
 
-function closeGracefully(signal) {
+async function closeGracefully(signal) {
   logger.info(`Received signal to terminate: ${signal}`);
   process.exit(0);
 }
