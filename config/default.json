@@ -4,13 +4,13 @@
   "network": "testnet",
   "grid": {
     "market_id": 1,
-    "max_base": 1500,
-    "max_quote": 100000,
+    "max_base": 1000,
+    "max_quote": 1000,
     "inventory_usage": 1,
-    "spread": 0.5,
+    "spread": 1,
     "levels": 3,
     "levels_step": 0.01,
-    "size_reversal": 0.8
+    "size_reversal": 0
   },
   "price": {
     "source": "ref",

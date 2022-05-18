@@ -92,10 +92,16 @@ export function calculateGridOrders(
   minBase: number,
   minQuote: number,
 ): GridOrders {
-  const spread = config.get('grid.spread');
-  const levels = config.get('grid.levels');
-  const levelsStep = config.get('grid.levels_step');
+  const spread = Math.abs(config.get('grid.spread'));
+  const levels = Math.abs(config.get('grid.levels'));
+  const levelsStep = Math.abs(config.get('grid.levels_step'));
   const sizeReversal = config.get('grid.size_reversal');
+
+  if (sizeReversal < -0.999 || sizeReversal > 0.999) {
+    throw Error(
+      'Wrong size_reversal param in config file. Min: -0.999, max: 0.999.',
+    );
+  }
 
   const priceFixedRate = (tickSize + '').split('.')[1].length;
   const sizeFixedRate = (stepSize + '').split('.')[1].length;

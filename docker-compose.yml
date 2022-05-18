@@ -1,7 +1,8 @@
 version: '3.8'
 
 x-app-service: &default-app
-  build: .
+  image: ghcr.io/spin-fi/spin-market-maker:main # Use public image if you want
+  # build: . # Or build your local copy
   command: main.js
   volumes:
     - './config:/usr/app/config'
@@ -17,6 +18,6 @@ x-app-service: &default-app
 services:
   spin-market-maker:
     <<: *default-app
-    container_name: 'example_name'
+    container_name: 'example_name' # Set name for container
     environment:
-      CONFIG_FILE: example.json
+      CONFIG_FILE: example.json # Set config file

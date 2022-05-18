@@ -1,7 +1,7 @@
 {
-  "name": "spin-grid-bot",
+  "name": "spin-market-maker",
   "version": "0.0.1",
-  "description": "Grid Bot example using Spin SDK",
+  "description": "Spin Market Maker example using Spin SDK",
   "type": "module",
   "engines": {
     "node": ">= 16.13 <17"

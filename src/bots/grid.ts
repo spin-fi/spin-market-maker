@@ -7,9 +7,13 @@ import { calculateGridOrders, numbDiff, sleep } from '../client/utils.js';
 export const GridBot = async () => {
   const SpinClient = new Client();
   const priceChangeTrigger = config.get('price.trigger');
-  const inventoryUsage = config.get('grid.inventory_usage');
-  const maxBase = config.get('grid.max_base');
-  const maxQuote = config.get('grid.max_quote');
+  const inventoryUsage = Math.abs(config.get('grid.inventory_usage'));
+  const maxBase = Math.abs(config.get('grid.max_base'));
+  const maxQuote = Math.abs(config.get('grid.max_quote'));
+
+  if (inventoryUsage > 1) {
+    throw Error('Wrong inventory_usage param in config file. Min: 0, max: 1.');
+  }
 
   let lastPrice = 0;
 
