@@ -1,0 +1,22 @@
+version: '3.8'
+
+x-app-service: &default-app
+  build: .
+  command: main.js
+  volumes:
+    - './config:/usr/app/config'
+  restart: on-failure
+  environment:
+    CONFIG_FILE: default.json
+  deploy:
+    resources:
+      limits:
+        cpus: '0.50'
+        memory: 256M
+
+services:
+  spin-market-maker:
+    <<: *default-app
+    container_name: 'example_name'
+    environment:
+      CONFIG_FILE: example.json

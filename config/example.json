@@ -13,9 +13,9 @@
     "size_reversal": 0.8
   },
   "price": {
-    "source": "ref",
-    "source_ticker": "3",
-    "source_check_interval": 2000,
+    "source": "binance",
+    "source_ticker": "NEAR/USDT",
+    "source_check_interval": 5000,
     "trigger": 0.5
   }
 }
