@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { getPrestable, getStable } from '@spinfi/shared';
 import config from '../configs/config.js';
 import { Order } from '@spinfi/core';
 import { GridOrders, SlopePoints } from './types.js';
@@ -41,12 +40,6 @@ export function sumOrdersNative(orders: Order[]): string {
     (sum, o) => new BigNumber(sum).plus(o.remaining).toString(),
     '0',
   );
-}
-
-export function getContractID(): string {
-  const network = config.get('network');
-  const stage = network === 'testnet' ? getPrestable() : getStable();
-  return stage.contractId;
 }
 
 export function priceFromPool(
