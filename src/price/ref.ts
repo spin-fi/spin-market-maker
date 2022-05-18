@@ -50,54 +50,60 @@ export class RefPricer {
       await this.init();
     }
 
-    const market = await this.account.viewFunction(
-      REF_CONTRACT_ID,
-      'get_pool',
-      { pool_id: this.poolId },
-    );
-
-    if (this.baseToken === '') {
-      this.baseToken = market.token_account_ids[0];
-    }
-
-    if (this.quoteToken === '') {
-      this.quoteToken = market.token_account_ids[1];
-    }
-
-    if (this.baseDecimals === 0) {
-      try {
-        const metadata = await this.account.viewFunction(
-          this.baseToken,
-          'ft_metadata',
-        );
-
-        this.baseDecimals = metadata.decimals;
-      } catch (error) {
-        logger.error(error);
-        throw Error(error);
+    try {
+      const market = await this.account.viewFunction(
+        REF_CONTRACT_ID,
+        'get_pool',
+        { pool_id: this.poolId },
+      );
+      if (this.baseToken === '') {
+        this.baseToken = market.token_account_ids[0];
       }
-    }
 
-    if (this.quoteDecimals === 0) {
-      try {
-        const metadata = await this.account.viewFunction(
-          this.quoteToken,
-          'ft_metadata',
-        );
-
-        this.quoteDecimals = metadata.decimals;
-      } catch (error) {
-        logger.error(error);
-        throw Error(error);
+      if (this.quoteToken === '') {
+        this.quoteToken = market.token_account_ids[1];
       }
-    }
 
-    this.price = priceFromPool(
-      market.amounts[0],
-      this.baseDecimals,
-      market.amounts[1],
-      this.quoteDecimals,
-    );
+      if (this.baseDecimals === 0) {
+        try {
+          const metadata = await this.account.viewFunction(
+            this.baseToken,
+            'ft_metadata',
+          );
+
+          this.baseDecimals = metadata.decimals;
+        } catch (error) {
+          logger.error(error);
+          throw Error(error);
+        }
+      }
+
+      if (this.quoteDecimals === 0) {
+        try {
+          const metadata = await this.account.viewFunction(
+            this.quoteToken,
+            'ft_metadata',
+          );
+
+          this.quoteDecimals = metadata.decimals;
+        } catch (error) {
+          logger.error(error);
+          throw Error(error);
+        }
+      }
+
+      this.price = priceFromPool(
+        market.amounts[0],
+        this.baseDecimals,
+        market.amounts[1],
+        this.quoteDecimals,
+      );
+
+      return this.price;
+    } catch (error) {
+      logger.error(error);
+      throw Error(error);
+    }
 
     return this.price;
   }
