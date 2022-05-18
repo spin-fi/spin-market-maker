@@ -1,27 +1,26 @@
-# Spin Market Maker Bot
+# The Spin Market Maker Bot
 
-Application example of how you can use [Spin SDK](https://github.com/spin-fi/near-dex-core-js).
-The application logic is a simple market maker or grid bot. Examples of parameters and configuration can be found in the config folder.
+Below is an example using the [Spin SDK](https://github.com/spin-fi/near-dex-core-js). The application is a simple market maker or grid bot. Some examples of application settings and configuration can be found in the config folder.
 
-> This is experimental software. No one is responsible for your actions. Use at your own risk.
+> This is experimental software. Nobody is responsible for your actions. Use at your own risk.
 
 ## Start with wallet
 
 You will need the `account_id` and `private key` of your NEAR account. You can obtain them using [near-cli](https://docs.near.org/docs/tools/near-cli).
 
-Login to your `testnet` Near account:
+Login to your `testnet` NEAR account:
 
 ```bash
 near login
 ```
 
-Login to your `mainnet` Near account:
+Login to your `mainnet` NEAR account:
 
 ```bash
 NEAR_ENV=mainnet near login
 ```
 
-Open wallet file on your local machine:
+Open the wallet file on your local machine:
 
 ```bash
 cd ~/.near-credentials
@@ -31,7 +30,7 @@ cd mainnet
 cat YOUR_WALLET.json
 ```
 
-Copy `account_id` and `private_key` values to config file:
+Copy `account_id` and `private_key` values to the config file:
 
 ```json
 {
@@ -43,7 +42,7 @@ Copy `account_id` and `private_key` values to config file:
 
 ## Deposit assets
 
-You need to deposit the funds that the bot will manage.
+You need to deposit funds to be managed by the bot.
 
 1. Use the DEX UI — [testnet.trade.spin.fi](https://testnet.trade.spin.fi/) for `testnet` or [trade.spin.fi](https://trade.spin.fi/) for `mainnet`. Read more about trading on Spin [here](https://docs.spin.fi/tools/spot-trading-mainnet).
 2. Use contract methods via [near-cli](https://docs.near.org/docs/tools/near-cli) at [docs.api.spin.fi](https://docs.api.spin.fi/#get_deposits).
@@ -58,7 +57,7 @@ Config schema can be found in `src/configs/config.ts` file.
   "account_id": "",
   // value from your wallet
   "private_key": "",
-  // Near network: testnet, mainnet
+  // NEAR network: testnet, mainnet
   "network": "testnet",
 
   // Grid settings

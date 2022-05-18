@@ -9,6 +9,11 @@ x-app-service: &default-app
   restart: on-failure
   environment:
     CONFIG_FILE: default.json
+  logging:
+    driver: 'json-file'
+    options:
+      max-size: '10m'
+      max-file: '10'
   deploy:
     resources:
       limits:

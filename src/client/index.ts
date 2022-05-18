@@ -73,11 +73,11 @@ export class Client {
         market.quote.decimal,
       );
 
-      if (config.get('grid.levels_step') < this.step_size) {
+      if (config.get('grid.levels_step') < this.tick_size) {
         throw Error(
           `Levels Step in configuration is lower than market step size. Increase it, or make equal. Levels Step Size: ${config.get(
             'grid.levels_step',
-          )}. Market Step Size: ${this.step_size}`,
+          )}. Market Step Size: ${this.tick_size}`,
         );
       }
 
