@@ -10,6 +10,7 @@ export const GridBot = async () => {
   const inventoryUsage = Math.abs(config.get('grid.inventory_usage'));
   const maxBase = Math.abs(config.get('grid.max_base'));
   const maxQuote = Math.abs(config.get('grid.max_quote'));
+  const sleepInterval = Math.abs(config.get('price.source_check_interval'));
 
   if (inventoryUsage > 1) {
     throw Error('Wrong inventory_usage param in config file. Min: 0, max: 1.');
@@ -44,6 +45,7 @@ export const GridBot = async () => {
         );
 
         await SpinClient.cancelAllOrders();
+
         const balances = await SpinClient.getbalances(true);
 
         const baseSize =
@@ -75,7 +77,7 @@ export const GridBot = async () => {
         logger.info('Orders placed. Waiting price change...');
       }
 
-      await sleep(config.get('price.source_check_interval'));
+      await sleep(sleepInterval);
     }
   } catch (err) {
     logger.error(err);

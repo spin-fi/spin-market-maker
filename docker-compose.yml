@@ -20,4 +20,6 @@ services:
     <<: *default-app
     container_name: 'example_name' # Set name for container
     environment:
-      CONFIG_FILE: example.json # Set config file
+      CONFIG_FILE: default.json # Set config file
+      # Uncomment for disabling Near logs
+      # NEAR_NO_LOGS: '1'
