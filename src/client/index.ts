@@ -277,4 +277,44 @@ export class Client {
       throw Error(error);
     }
   }
+
+  async cancelAndBatchOpsPlacing(orders: GridOrders) {
+    const userOrdersRaw = await this.getOrders();
+    const userOrdersIds = userOrdersRaw.map((o) => o.id);
+
+    const bidOrders = orders.bids.map((o) => ({
+      marketId: this.market.id,
+      orderType: USide.Bid,
+      price: convertToDecimals(o.price, this.market.quote.decimal),
+      quantity: convertToDecimals(o.size, this.market.base.decimal),
+      marketOrder: false,
+    }));
+
+    const askOrders = orders.asks.map((o) => ({
+      marketId: this.market.id,
+      orderType: USide.Ask,
+      price: convertToDecimals(o.price, this.market.quote.decimal),
+      quantity: convertToDecimals(o.size, this.market.base.decimal),
+      marketOrder: false,
+    }));
+
+    logger.info('Canceling and placing orders via batchOps');
+
+    try {
+      await this.spin.batchOps({
+        ops: [
+          {
+            marketId: this.market.id,
+            drop: userOrdersIds,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            place: [...bidOrders, ...askOrders],
+          },
+        ],
+      });
+    } catch (error) {
+      logger.error(error);
+      throw Error(error);
+    }
+  }
 }

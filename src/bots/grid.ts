@@ -11,6 +11,7 @@ export const GridBot = async () => {
   const maxBase = Math.abs(config.get('grid.max_base'));
   const maxQuote = Math.abs(config.get('grid.max_quote'));
   const sleepInterval = Math.abs(config.get('price.source_check_interval'));
+  const batched = config.get('batched');
 
   if (inventoryUsage > 1) {
     throw Error('Wrong inventory_usage param in config file. Min: 0, max: 1.');
@@ -44,22 +45,36 @@ export const GridBot = async () => {
           ).toFixed(4)}`,
         );
 
-        await SpinClient.cancelAllOrders();
+        if (!batched) {
+          await SpinClient.cancelAllOrders();
+        }
 
         const balances = await SpinClient.getbalances(true);
 
         const baseSize =
           maxBase === 0
-            ? balances.base.formatted.available * inventoryUsage
-            : maxBase >= balances.base.formatted.available
-            ? balances.base.formatted.available * inventoryUsage
+            ? (balances.base.formatted.available +
+                balances.base.formatted.locked_in_orders) *
+              inventoryUsage
+            : maxBase >=
+              balances.base.formatted.available +
+                balances.base.formatted.locked_in_orders
+            ? (balances.base.formatted.available +
+                balances.base.formatted.locked_in_orders) *
+              inventoryUsage
             : maxBase * inventoryUsage;
 
         const quoteSize =
           maxQuote === 0
-            ? balances.quote.formatted.available * inventoryUsage
-            : maxQuote >= balances.quote.formatted.available
-            ? balances.quote.formatted.available * inventoryUsage
+            ? (balances.quote.formatted.available +
+                balances.quote.formatted.locked_in_orders) *
+              inventoryUsage
+            : maxQuote >=
+              balances.quote.formatted.available +
+                balances.quote.formatted.locked_in_orders
+            ? (balances.quote.formatted.available +
+                balances.quote.formatted.locked_in_orders) *
+              inventoryUsage
             : maxQuote * inventoryUsage;
 
         const orders = calculateGridOrders(
@@ -73,7 +88,11 @@ export const GridBot = async () => {
         );
 
         lastPrice = newPrice;
-        await SpinClient.batchOpsPlacing(orders);
+
+        batched
+          ? await SpinClient.cancelAndBatchOpsPlacing(orders)
+          : await SpinClient.batchOpsPlacing(orders);
+
         logger.info('Orders placed. Waiting price change...');
       }
 

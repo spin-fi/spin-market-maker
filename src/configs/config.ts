@@ -28,6 +28,11 @@ const config = convict({
     format: ['testnet', 'mainnet'],
     default: 'testnet',
   },
+  batched: {
+    doc: 'Batched Transactions',
+    format: [true, false],
+    default: false,
+  },
   grid: {
     market_id: {
       doc: 'Spin Market Id',
