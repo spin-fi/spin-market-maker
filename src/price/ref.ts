@@ -1,16 +1,13 @@
 import * as nearApi from 'near-api-js';
 import { priceFromPool } from '../client/utils.js';
-import config from '../configs/config.js';
 import logger from '../logger/index.js';
 
 const REF_CONTRACT_ID = 'v2.ref-finance.near';
 
 export class RefPricer {
-  private price: number;
   private initialized: boolean;
   private near: nearApi.Near;
   private account: nearApi.Account;
-  private poolId: number;
   private baseToken: string;
   private quoteToken: string;
   private baseDecimals: number;
@@ -18,10 +15,8 @@ export class RefPricer {
   private nearConfig: nearApi.ConnectConfig;
 
   constructor() {
-    this.price = 0;
     this.initialized = false;
     this.near;
-    this.poolId = 0;
     this.baseToken = '';
     this.quoteToken = '';
     this.baseDecimals = 0;
@@ -36,16 +31,13 @@ export class RefPricer {
   }
 
   async init(): Promise<void> {
-    this.poolId = +config.get('price.source_ticker');
-
     this.near = await nearApi.connect(this.nearConfig);
-
     this.account = await this.near.account('near.near');
-    logger.info(`Connected to Ref.Finance — #${this.poolId} pool`);
+    logger.info(`Connected to Ref.Finance`);
     this.initialized = true;
   }
 
-  async getPrice(): Promise<number> {
+  async getPrice(poolId: number): Promise<number> {
     if (!this.initialized) {
       await this.init();
     }
@@ -54,7 +46,7 @@ export class RefPricer {
       const market = await this.account.viewFunction(
         REF_CONTRACT_ID,
         'get_pool',
-        { pool_id: this.poolId },
+        { pool_id: poolId },
       );
       if (this.baseToken === '') {
         this.baseToken = market.token_account_ids[0];
@@ -92,19 +84,15 @@ export class RefPricer {
         }
       }
 
-      this.price = priceFromPool(
+      return priceFromPool(
         market.amounts[0],
         this.baseDecimals,
         market.amounts[1],
         this.quoteDecimals,
       );
-
-      return this.price;
     } catch (error) {
       logger.error(error);
       throw Error(error);
     }
-
-    return this.price;
   }
 }
