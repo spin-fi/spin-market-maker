@@ -101,7 +101,10 @@ export function calculateGridOrders(
   const sizeFixedRate =
     stepSize === 1 ? 0 : (stepSize + '').split('.')[1].length;
 
-  const halfSpread = (currentPrice / 100) * (spread / 2);
+  const halfSpread =
+    (currentPrice / 100) * (spread / 2) < tickSize / 2
+      ? tickSize / 2
+      : (currentPrice / 100) * (spread / 2);
 
   const reversalPoints = {
     1: { x: 1, y: 1 + sizeReversal },
@@ -114,12 +117,13 @@ export function calculateGridOrders(
   const asks = [];
   const bids = [];
 
-  for (let index = 0; index < levels; index++) {
-    const priceModifier = halfSpread + levelsStep * index;
+  for (let level = 0; level < levels; level++) {
+    const priceModifier = halfSpread + levelsStep * level;
+
     const sizeModifier =
       levels === 1
         ? 1
-        : (index + 1) * reversalIntercept.m + reversalIntercept.b;
+        : (level + 1) * reversalIntercept.m + reversalIntercept.b;
 
     const askPrice = Floor(currentPrice + priceModifier, priceFixedRate);
     const askSize = Floor(sizeModifier * asksSizer, sizeFixedRate);
