@@ -104,14 +104,14 @@ const config = convict({
       default: 'none',
     },
     levels_trigger: {
-      doc: 'Amount of levels filled, when trigger replacing function',
+      doc: 'Amount of levels filled, when trigger order placing',
       format: Number,
       default: 1,
     },
     percent_trigger: {
-      doc: 'TBD',
+      doc: 'Amount of percent filled, when trigger order placing. Max base + max quote required.',
       format: Number,
-      default: 0.5, // 50%
+      default: 0.1, // 10%
     },
     trigger_check_interval: {
       doc: 'Trigger source check interval',

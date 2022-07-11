@@ -59,6 +59,8 @@ Config schema can be found in `src/configs/config.ts` file.
   "private_key": "",
   // NEAR network: testnet, mainnet
   "network": "testnet",
+  // Use Spin batchOps method for placing and canceling orders: boolean
+  "batched": false,
 
   // Grid settings
   "grid": {
@@ -96,11 +98,22 @@ Config schema can be found in `src/configs/config.ts` file.
     // For ref source use pool id: https://app.ref.finance/pools
     // For binance, ftx: use ticker from exchange.
     "source_ticker": "3",
-    // Price sync trigger.
+    // Price sync trigger, ms
     "source_check_interval": 2000,
     // Price change trigger.
     // 0 = 0%, .5 = 0.5%, 1 = 1%, 20 = 20%, etc.
     "trigger": 0.5
+  },
+
+  "trigger": {
+    // 'none', 'levels', 'percent'
+    "trigger_strategy": "none",
+    // number
+    "levels_trigger": 1,
+    // 0 = 0%, .5 = 0.5%, 1 = 1%, 20 = 20%, etc.
+    "percent_trigger": 0.1,
+    // Trigger check interval, ms
+    "trigger_check_interval": 5000
   }
 }
 ```
