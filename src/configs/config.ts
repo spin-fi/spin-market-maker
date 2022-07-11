@@ -97,6 +97,28 @@ const config = convict({
       default: 1, // 1%
     },
   },
+  trigger: {
+    trigger_strategy: {
+      doc: 'Additional trigger strategies',
+      format: ['none', 'levels', 'percent'],
+      default: 'none',
+    },
+    levels_trigger: {
+      doc: 'Amount of levels filled, when trigger replacing function',
+      format: Number,
+      default: 1,
+    },
+    percent_trigger: {
+      doc: 'TBD',
+      format: Number,
+      default: 0.5, // 50%
+    },
+    trigger_check_interval: {
+      doc: 'Trigger source check interval',
+      format: Number,
+      default: 5000, // 5 seconds
+    },
+  },
 });
 
 export type Config = typeof config;

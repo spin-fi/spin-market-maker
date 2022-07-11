@@ -281,7 +281,6 @@ export class Client {
   async cancelAndBatchOpsPlacing(orders: GridOrders) {
     const userOrdersRaw = await this.getOrders();
     const userOrdersIds = userOrdersRaw.map((o) => o.id);
-
     const bidOrders = orders.bids.map((o) => ({
       marketId: this.market.id,
       orderType: USide.Bid,
