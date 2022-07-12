@@ -1,6 +1,6 @@
 {
   "name": "spin-market-maker",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Spin Market Maker example using Spin SDK",
   "type": "module",
   "engines": {
