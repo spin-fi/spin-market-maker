@@ -1,7 +1,10 @@
 import 'reflect-metadata'
+import * as dotenvFlow from 'dotenv-flow'
 import logger from './logger/index.js'
 import config from './configs/config.js'
 import { GridBot } from './bots/grid.js'
+
+dotenvFlow.config()
 
 process.on('unhandledRejection', (err) => {
   throw err
