@@ -1,4 +1,4 @@
-import convict from 'convict';
+import convict from 'convict'
 
 const config = convict({
   env: {
@@ -97,8 +97,30 @@ const config = convict({
       default: 1, // 1%
     },
   },
-});
+  trigger: {
+    trigger_strategy: {
+      doc: 'Additional trigger strategies',
+      format: ['none', 'levels', 'percent'],
+      default: 'none',
+    },
+    levels_trigger: {
+      doc: 'Amount of levels filled, when trigger order placing',
+      format: Number,
+      default: 1,
+    },
+    percent_trigger: {
+      doc: 'Amount of percent filled, when trigger order placing. Max base + max quote required.',
+      format: Number,
+      default: 0.1, // 10%
+    },
+    trigger_check_interval: {
+      doc: 'Trigger source check interval',
+      format: Number,
+      default: 5000, // 5 seconds
+    },
+  },
+})
 
-export type Config = typeof config;
+export type Config = typeof config
 
-export default config;
+export default config

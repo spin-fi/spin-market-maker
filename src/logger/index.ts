@@ -1,5 +1,5 @@
-import pino from 'pino';
-import pretty from 'pino-pretty';
+import pino from 'pino'
+import pretty from 'pino-pretty'
 
 const logger = pino(
   pretty({
@@ -7,6 +7,6 @@ const logger = pino(
     translateTime: true,
     ignore: 'pid,hostname',
   }),
-);
+)
 
-export default logger;
+export default logger

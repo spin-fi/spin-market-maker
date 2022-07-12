@@ -1,41 +1,41 @@
-import 'reflect-metadata';
-import logger from './logger/index.js';
-import config from './configs/config.js';
-import { GridBot } from './bots/grid.js';
+import 'reflect-metadata'
+import logger from './logger/index.js'
+import config from './configs/config.js'
+import { GridBot } from './bots/grid.js'
 
 process.on('unhandledRejection', (err) => {
-  throw err;
-});
+  throw err
+})
 
 const bootstrap = async () => {
-  const configFile = process.env.CONFIG_FILE || 'default.json';
+  const configFile = process.env.CONFIG_FILE || 'default.json'
   try {
-    logger.info(`Starting application. Loading ${configFile} config`);
+    logger.info(`Starting application. Loading ${configFile} config`)
 
     // Load configuration
-    config.loadFile(`./config/${configFile}`);
+    config.loadFile(`./config/${configFile}`)
 
     // Perform validation
-    await config.validate({ allowed: 'strict' });
+    await config.validate({ allowed: 'strict' })
 
-    logger.info('Configuration successful');
-    logger.info('Starting Grid Bot');
+    logger.info('Configuration successful')
+    logger.info('Starting Grid Bot')
 
-    await GridBot();
+    await GridBot()
   } catch (err) {
-    logger.error({ err }, 'Can not bootstrap application');
-    throw err;
+    logger.error({ err }, 'Can not bootstrap application')
+    throw err
   }
-};
-
-bootstrap().catch(() => {
-  process.exit(1);
-});
-
-async function closeGracefully(signal) {
-  logger.info(`Received signal to terminate: ${signal}`);
-  process.exit(0);
 }
 
-process.on('SIGINT', closeGracefully);
-process.on('SIGTERM', closeGracefully);
+bootstrap().catch(() => {
+  process.exit(1)
+})
+
+async function closeGracefully(signal) {
+  logger.info(`Received signal to terminate: ${signal}`)
+  process.exit(0)
+}
+
+process.on('SIGINT', closeGracefully)
+process.on('SIGTERM', closeGracefully)
