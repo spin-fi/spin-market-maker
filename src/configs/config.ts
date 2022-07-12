@@ -1,4 +1,4 @@
-import convict from 'convict';
+import convict from 'convict'
 
 const config = convict({
   env: {
@@ -119,8 +119,8 @@ const config = convict({
       default: 5000, // 5 seconds
     },
   },
-});
+})
 
-export type Config = typeof config;
+export type Config = typeof config
 
-export default config;
+export default config
