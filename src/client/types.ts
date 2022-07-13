@@ -40,3 +40,41 @@ export interface GridOrders {
   asks: GridOrder[]
   bids: GridOrder[]
 }
+
+export interface PerpMarket {
+  id: number
+  symbol: string
+  leverage: string
+  fees: {
+    maker_fee: string
+    taker_fee: string
+    decimals: number
+    is_rebate: boolean
+  }
+  availability: {
+    allow_place: boolean
+    allow_cancel: boolean
+  }
+  limits: {
+    tick_size: string
+    step_size: string
+    min_base_quantity: string
+    max_base_quantity: string
+    min_quote_quantity: string
+    max_quote_quantity: string
+    max_bid_count: number
+    max_ask_count: number
+    max_match_count: number
+  }
+}
+
+export interface PerpBalance {
+  base: Balance
+}
+
+export type PerpBaseCurrency = {
+  address: string
+  decimals: number
+  symbol: string
+  max_deposit: string
+}

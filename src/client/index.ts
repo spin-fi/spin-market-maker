@@ -178,10 +178,6 @@ export class Client {
     }
   }
 
-  getMarket() {
-    return this.market
-  }
-
   async getbalances(updateBalances = false) {
     if (updateBalances) {
       return await this.setBalances()

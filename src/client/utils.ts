@@ -2,16 +2,17 @@ import BigNumber from 'bignumber.js'
 import config from '../configs/config.js'
 import { Order } from '@spinfi/core'
 import { GridOrders, SlopePoints } from './types.js'
+import { getPrestable, getStable } from '@spinfi/shared'
 
 export function declOfNum(number, words) {
   return words[
     number % 100 > 4 && number % 100 < 20 ? 2 : [2, 0, 1, 1, 1, 2][number % 10 < 5 ? Math.abs(number) % 10 : 5]
   ]
 }
-export function convertWithDecimals(value: string | number, decimal: string | number): number {
+export function convertWithDecimals(value: string | number, decimal: string | number = 24): number {
   return new BigNumber(value).dividedBy(new BigNumber(10).pow(new BigNumber(decimal))).toNumber() || 0
 }
-export function convertToDecimals(value: string | number, decimal: string | number): string {
+export function convertToDecimals(value: string | number, decimal: string | number = 24): string {
   return new BigNumber(value).multipliedBy(new BigNumber(10).pow(new BigNumber(decimal))).toString() || '0'
 }
 
@@ -93,7 +94,10 @@ export function calculateGridOrders(
     const sizeModifier = levels === 1 ? 1 : (level + 1) * reversalIntercept.m + reversalIntercept.b
 
     const askPrice = Floor(currentPrice + priceModifier, priceFixedRate)
-    const askSize = Floor(sizeModifier * asksSizer, sizeFixedRate)
+    const askSize =
+      config.get('market') === 'spot'
+        ? Floor(sizeModifier * asksSizer, sizeFixedRate)
+        : Floor((sizeModifier * asksSizer) / (currentPrice + priceModifier), sizeFixedRate)
     asks.push({ price: askPrice, size: askSize })
 
     const bidPrice = Floor(currentPrice - priceModifier, priceFixedRate)
@@ -119,4 +123,24 @@ export function calculateGridOrders(
     asks: asks.reverse(),
     bids: bids,
   }
+}
+
+// ToDo: remove
+export function getContractId(): string {
+  const market = config.get('market')
+  const network = config.get('network')
+
+  if (market === 'spot') {
+    return network === 'testnet' ? getPrestable().contractId : getStable().contractId
+  }
+
+  if (market === 'perp') {
+    return network === 'testnet' ? process.env.PERP_CONTRACT_ID : ''
+  }
+
+  return getPrestable().contractId
+}
+
+export function getDeadline() {
+  return ((+new Date() + 60 * 1000) * 1_000_000).toString()
 }

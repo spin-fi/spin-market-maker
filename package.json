@@ -39,6 +39,7 @@
   "dependencies": {
     "@spinfi/core": "^1.0.1",
     "@spinfi/node": "^1.0.1",
+    "@spinfi/shared": "^0.2.1",
     "bignumber.js": "^9.0.2",
     "ccxws": "^0.47.0",
     "convict": "^6.2.3",

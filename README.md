@@ -61,7 +61,8 @@ Config schema can be found in `src/configs/config.ts` file.
   "network": "testnet",
   // Use Spin batchOps method for placing and canceling orders: boolean
   "batched": false,
-
+  // Market type: spot, perp
+  "market": "spot",
   // Grid settings
   "grid": {
     // Spin market id: https://docs.api.spin.fi/#get_markets
