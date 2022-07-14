@@ -33,6 +33,11 @@ const config = convict({
     format: [true, false],
     default: false,
   },
+  market: {
+    doc: 'Spot / Perp / ...',
+    format: ['spot', 'perp'],
+    default: 'spot',
+  },
   grid: {
     market_id: {
       doc: 'Spin Market Id',

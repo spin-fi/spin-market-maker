@@ -1,7 +1,11 @@
 import 'reflect-metadata'
+import * as dotenvFlow from 'dotenv-flow'
 import logger from './logger/index.js'
 import config from './configs/config.js'
 import { GridBot } from './bots/grid.js'
+import { PerpGridBot } from './bots/perpGrid.js'
+
+dotenvFlow.config()
 
 process.on('unhandledRejection', (err) => {
   throw err
@@ -21,7 +25,7 @@ const bootstrap = async () => {
     logger.info('Configuration successful')
     logger.info('Starting Grid Bot')
 
-    await GridBot()
+    config.get('market') === 'spot' ? await GridBot() : await PerpGridBot()
   } catch (err) {
     logger.error({ err }, 'Can not bootstrap application')
     throw err

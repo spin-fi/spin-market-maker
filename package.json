@@ -20,11 +20,10 @@
     "rimraf": "~3.0.2",
     "ts-jest": "~28.0.5",
     "tsc-watch": "^5.0.3",
-    "tsutils": "~3.21.0",
     "typescript": "~4.7.4"
   },
   "scripts": {
-    "start": "node build/src/main.js",
+    "start": "NODE_ENV=production node build/src/main.js",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "dev": "tsc-watch -p ./tsconfig.json --onSuccess \"node ./build/src/main.js\"",
@@ -38,19 +37,17 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@spinfi/core": "^1.0.1",
     "@spinfi/node": "^1.0.1",
+    "@spinfi/shared": "^0.2.1",
     "bignumber.js": "^9.0.2",
     "ccxws": "^0.47.0",
-    "config": "^3.3.7",
     "convict": "^6.2.3",
-    "js-yaml": "^4.1.0",
+    "dotenv-flow": "^3.2.0",
     "near-api-js": "^0.45.1",
-    "node-fetch": "^3.2.7",
     "pino": "^7.11.0",
     "pino-pretty": "^7.6.1",
-    "reflect-metadata": "^0.1.13",
-    "ts-convict": "^1.1.0",
-    "tslib": "~2.4.0"
+    "reflect-metadata": "^0.1.13"
   },
   "volta": {
     "node": "16.13.0"
