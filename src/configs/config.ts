@@ -124,6 +124,34 @@ const config = convict({
       default: 5000, // 5 seconds
     },
   },
+  // Dev only
+  trader: {
+    enable: {
+      doc: '...',
+      format: [true, false],
+      default: false,
+    },
+    trade_interval: {
+      doc: '...',
+      format: Number,
+      default: 1000, // 1 second
+    },
+    trade_style: {
+      doc: '...',
+      format: ['random', 'alternate'],
+      default: 'random',
+    },
+    trade_min_size: {
+      doc: '...',
+      format: Number,
+      default: 0.1,
+    },
+    trade_max_size: {
+      doc: '...',
+      format: Number,
+      default: 1,
+    },
+  },
 })
 
 export type Config = typeof config
