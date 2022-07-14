@@ -60,7 +60,7 @@ export class Client {
         throw Error(
           `Levels Step in configuration is lower than market step size. Increase it, or make equal. Levels Step Size: ${config.get(
             'grid.levels_step',
-          )}. Market Step Size: ${this.tick_size}`,
+          )}. Market Tick Size: ${this.tick_size}`,
         )
       }
 
