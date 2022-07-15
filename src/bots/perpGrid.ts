@@ -43,7 +43,6 @@ export const PerpGridBot = async () => {
   async function orderPlacing(trigger_event: string, price: number) {
     logger.info('')
     logger.info(trigger_event)
-    logger.info('')
     placingInProgress = true
 
     if (!config.get('batched')) {

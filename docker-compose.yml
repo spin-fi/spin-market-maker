@@ -1,7 +1,7 @@
 version: '3.8'
 
 x-app-service: &default-app
-  image: ghcr.io/spin-fi/spin-market-maker:main # Use public image if you want
+  image: ghcr.io/spin-fi/spin-market-maker:latest # Use public image if you want
   # build: . # Or build your local copy
   command: main.js
   volumes:

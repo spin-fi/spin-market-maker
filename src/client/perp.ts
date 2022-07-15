@@ -101,6 +101,14 @@ export class PerpClient {
     }
   }
 
+  async getL1() {
+    try {
+      return await this.viewFunction('get_orderbook', { market_id: config.get('grid.market_id'), limit: 1 })
+    } catch (error) {
+      throw Error('Cant load L1 orderbook')
+    }
+  }
+
   async getOrders(): Promise<Order[]> {
     try {
       return await this.viewFunction('get_orders', {
@@ -279,6 +287,32 @@ export class PerpClient {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             place: [...bidOrders, ...askOrders],
+          },
+        ],
+        deadline: getDeadline(),
+      })
+    } catch (error) {
+      logger.error(error)
+      throw Error(error)
+    }
+  }
+
+  async placeMarketOrder(order_type: USide, price: number, quantity: number) {
+    const order = {
+      order_type: order_type,
+      price: convertToDecimals(price, this.decimal),
+      quantity: convertToDecimals(quantity, this.decimal),
+      market_order: false,
+      time_in_force: 'FOK',
+    }
+
+    try {
+      await this.callFunction('batch_ops', {
+        ops: [
+          {
+            market_id: this.market.id,
+            drop: [],
+            place: [order],
           },
         ],
         deadline: getDeadline(),

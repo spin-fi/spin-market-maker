@@ -4,6 +4,7 @@ import logger from './logger/index.js'
 import config from './configs/config.js'
 import { GridBot } from './bots/grid.js'
 import { PerpGridBot } from './bots/perpGrid.js'
+import { PerpTraderBot } from './bots/perpTrader.js'
 
 dotenvFlow.config()
 
@@ -25,7 +26,21 @@ const bootstrap = async () => {
     logger.info('Configuration successful')
     logger.info('Starting Grid Bot')
 
-    config.get('market') === 'spot' ? await GridBot() : await PerpGridBot()
+    switch (config.get('market')) {
+      case 'spot':
+        if (config.get('trader.enable')) {
+          throw new Error('Not implemented')
+        }
+        await GridBot()
+        break
+      case 'perp':
+        if (config.get('trader.enable')) {
+          await PerpTraderBot()
+        } else {
+          await PerpGridBot()
+        }
+        break
+    }
   } catch (err) {
     logger.error({ err }, 'Can not bootstrap application')
     throw err

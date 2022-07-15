@@ -71,8 +71,8 @@ export function calculateGridOrders(
     throw Error('Wrong size_reversal param in config file. Min: -0.999, max: 0.999.')
   }
 
-  const priceFixedRate = tickSize === 1 ? 0 : (tickSize + '').split('.')[1].length
-  const sizeFixedRate = stepSize === 1 ? 0 : (stepSize + '').split('.')[1].length
+  const priceFixedRate = getFixedPoint(tickSize)
+  const sizeFixedRate = getFixedPoint(stepSize)
 
   const halfSpread =
     (currentPrice / 100) * (spread / 2) < tickSize / 2 ? tickSize / 2 : (currentPrice / 100) * (spread / 2)
@@ -143,4 +143,12 @@ export function getContractId(): string {
 
 export function getDeadline() {
   return ((+new Date() + 60 * 1000) * 1_000_000).toString()
+}
+
+export function getFixedPoint(n: number): number {
+  return n === 1 ? 0 : (n + '').split('.')[1].length
+}
+
+export function randomFloat(min: number, max: number, fixed = 2): number {
+  return +(Math.random() * (max - min) + min).toFixed(fixed)
 }
