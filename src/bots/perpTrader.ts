@@ -2,14 +2,16 @@ import logger from '../logger/index.js'
 import { PerpClient } from '../client/perp.js'
 import config from '../configs/config.js'
 import { USide } from '@spinfi/core'
-import { convertToDecimals, convertWithDecimals, getFixedPoint, randomFloat } from '../client/utils.js'
+import { convertToDecimals, convertWithDecimals, getFixedPoint, randomFloat, sleep } from '../client/utils.js'
 import BigNumber from 'bignumber.js'
 
 export const PerpTraderBot = async () => {
   const SpinClient = new PerpClient()
   const tradeStyle = config.get('trader.trade_style')
-  const minTradeSize = config.get('trader.trade_min_size')
-  const maxTradeSize = config.get('trader.trade_max_size')
+  const minTradeSize = Math.abs(config.get('trader.trade_min_size'))
+  const maxTradeSize = Math.abs(config.get('trader.trade_max_size'))
+  const minSleepInterval = Math.abs(config.get('trader.trade_min_interval'))
+  const maxSleepInterval = Math.abs(config.get('trader.trade_max_interval'))
   const sideMap = new Map([
     [true, USide.Ask],
     [false, USide.Bid],
@@ -60,11 +62,14 @@ export const PerpTraderBot = async () => {
           : randomSize
 
       await orderPlacing('New trade time trigger event', orderPrice, orderSize, sideMap.get(side))
+
+      const sleepTime = randomFloat(minSleepInterval, maxSleepInterval, 0)
+      logger.info(`Sleeping for ${(sleepTime / 1000).toFixed(1)} seconds.`)
+      await sleep(sleepTime)
+      await execution()
     }
-
+    logger.info(`Trade style (side): ${tradeStyle}`)
     await execution()
-
-    setInterval(async () => await execution(), Math.abs(config.get('trader.trade_interval')))
   }
 
   try {

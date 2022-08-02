@@ -24,19 +24,22 @@ const bootstrap = async () => {
     await config.validate({ allowed: 'strict' })
 
     logger.info('Configuration successful')
-    logger.info('Starting Grid Bot')
 
     switch (config.get('market')) {
       case 'spot':
         if (config.get('trader.enable')) {
           throw new Error('Not implemented')
+          logger.info('Starting Spot Trader Bot')
         }
+        logger.info('Starting Grid Bot')
         await GridBot()
         break
       case 'perp':
         if (config.get('trader.enable')) {
+          logger.info('Starting Perp Trader Bot')
           await PerpTraderBot()
         } else {
+          logger.info('Starting Perp Grid Bot')
           await PerpGridBot()
         }
         break

@@ -131,10 +131,15 @@ const config = convict({
       format: [true, false],
       default: false,
     },
-    trade_interval: {
+    trade_min_interval: {
       doc: '...',
       format: Number,
       default: 1000, // 1 second
+    },
+    trade_max_interval: {
+      doc: '...',
+      format: Number,
+      default: 2000, // 1 second
     },
     trade_style: {
       doc: '...',
