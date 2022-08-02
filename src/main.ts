@@ -2,7 +2,8 @@ import 'reflect-metadata'
 import * as dotenvFlow from 'dotenv-flow'
 import logger from './logger/index.js'
 import config from './configs/config.js'
-import { GridBot } from './bots/grid.js'
+import { GridBot } from './bots/spotGrid.js'
+import { SpotTraderBot } from './bots/spotTrader.js'
 import { PerpGridBot } from './bots/perpGrid.js'
 import { PerpTraderBot } from './bots/perpTrader.js'
 
@@ -28,11 +29,12 @@ const bootstrap = async () => {
     switch (config.get('market')) {
       case 'spot':
         if (config.get('trader.enable')) {
-          throw new Error('Not implemented')
           logger.info('Starting Spot Trader Bot')
+          await SpotTraderBot()
+        } else {
+          logger.info('Starting Grid Bot')
+          await GridBot()
         }
-        logger.info('Starting Grid Bot')
-        await GridBot()
         break
       case 'perp':
         if (config.get('trader.enable')) {

@@ -1,12 +1,12 @@
 import logger from '../logger/index.js'
-import { PerpClient } from '../client/perp.js'
+import { SpotClient } from '../client/spot.js'
 import config from '../configs/config.js'
 import { USide } from '@spinfi/core'
 import { convertToDecimals, convertWithDecimals, getFixedPoint, randomFloat, sleep } from '../client/utils.js'
 import BigNumber from 'bignumber.js'
 
-export const PerpTraderBot = async () => {
-  const SpinClient = new PerpClient()
+export const SpotTraderBot = async () => {
+  const SpinClient = new SpotClient()
   const tradeStyle = config.get('trader.trade_style')
   const minTradeSize = Math.abs(config.get('trader.trade_min_size'))
   const maxTradeSize = Math.abs(config.get('trader.trade_max_size'))
@@ -27,10 +27,10 @@ export const PerpTraderBot = async () => {
   async function orderPlacing(trigger_event: string, price: number, size: number, side: USide) {
     logger.info('')
     logger.info(trigger_event)
-    logger.info(`${side} ${convertWithDecimals(price)}@${size} order placing...`)
+    logger.info(`${side} ${convertWithDecimals(price, SpinClient.market.quote.decimal)}@${size} order placing...`)
 
     try {
-      await SpinClient.placeMarketOrder(side, convertWithDecimals(price), size)
+      await SpinClient.placeMarketOrder(side, convertWithDecimals(price, SpinClient.market.quote.decimal), size)
     } catch (error) {
       logger.info('Order not placed. Oops!')
       logger.error(error)
@@ -54,17 +54,21 @@ export const PerpTraderBot = async () => {
       placingInProgress = true
 
       const ob = await SpinClient.getL1()
+
       const randomSize = randomFloat(minTradeSize, maxTradeSize, getFixedPoint(SpinClient.step_size))
       const orderPrice = ob[obMap.get(side)][0]?.price
       const orderSize =
-        new BigNumber(convertToDecimals(randomSize)).comparedTo(new BigNumber(ob[obMap.get(side)][0]?.quantity)) === 1
-          ? convertWithDecimals(ob[obMap.get(side)][0]?.quantity)
+        new BigNumber(convertToDecimals(randomSize, SpinClient.market.base.decimal)).comparedTo(
+          new BigNumber(ob[obMap.get(side)][0]?.quantity),
+        ) === 1
+          ? convertWithDecimals(ob[obMap.get(side)][0]?.quantity, SpinClient.market.base.decimal)
           : randomSize
 
       await orderPlacing('New trade time trigger event', orderPrice, orderSize, sideMap.get(side))
 
       const sleepTime = randomFloat(minSleepInterval, maxSleepInterval, 0)
       logger.info(`Sleeping for ${(sleepTime / 1000).toFixed(1)} seconds.`)
+
       await sleep(sleepTime)
       await execution()
     }

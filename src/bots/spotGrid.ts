@@ -1,5 +1,5 @@
 import logger from '../logger/index.js'
-import { Client } from '../client/index.js'
+import { SpotClient } from '../client/spot.js'
 import { getLastPrice } from '../price/index.js'
 import config from '../configs/config.js'
 import { calculateGridOrders, numbDiff } from '../client/utils.js'
@@ -7,7 +7,7 @@ import { USide } from '@spinfi/core'
 import BigNumber from 'bignumber.js'
 
 export const GridBot = async () => {
-  const SpinClient = new Client()
+  const SpinClient = new SpotClient()
   const priceChangeTrigger = config.get('price.trigger')
   const inventoryUsage = Math.abs(config.get('grid.inventory_usage'))
   const maxBase = Math.abs(config.get('grid.max_base'))

@@ -8,11 +8,11 @@ import { convertToDecimals, convertWithDecimals, declOfNum, sumOrdersNative } fr
 
 BigNumber.set({ EXPONENTIAL_AT: 30 })
 
-export class Client {
+export class SpotClient {
   private api: Api
   private spin: Spin
-  private market: Market
   private balances: Balances
+  market: Market
   tick_size: number
   step_size: number
   min_base_size: number
@@ -253,6 +253,40 @@ export class Client {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             place: [...bidOrders, ...askOrders],
+          },
+        ],
+      })
+    } catch (error) {
+      logger.error(error)
+      throw Error(error)
+    }
+  }
+
+  async getL1() {
+    try {
+      return await this.spin.getOrderbook({ marketId: this.market.id, limit: 1 })
+    } catch (error) {
+      throw Error('Cant load L1 orderbook')
+    }
+  }
+
+  async placeMarketOrder(order_type: USide, price: number, quantity: number) {
+    const order = {
+      marketId: this.market.id,
+      orderType: order_type,
+      price: convertToDecimals(price, this.market.quote.decimal),
+      quantity: convertToDecimals(quantity, this.market.base.decimal),
+      marketOrder: true,
+    }
+    try {
+      await this.spin.batchOps({
+        ops: [
+          {
+            marketId: this.market.id,
+            drop: [],
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            place: [order],
           },
         ],
       })
