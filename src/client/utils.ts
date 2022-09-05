@@ -135,7 +135,7 @@ export function getContractId(): string {
   }
 
   if (market === 'perp') {
-    return network === 'testnet' ? process.env.PERP_CONTRACT_ID : ''
+    return process.env.PERP_CONTRACT_ID
   }
 
   return getPrestable().contractId

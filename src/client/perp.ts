@@ -50,6 +50,7 @@ export class PerpClient {
       privateKey: config.get('private_key'),
       contractId: getContractId(),
     })
+
     this.contract_id = getContractId()
     this.spin = await this.api.spin
     this.market = await this.setMarket()
@@ -58,12 +59,12 @@ export class PerpClient {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async viewFunction(method: string, args: any) {
-    return await await this.api.account.viewFunction(this.contract_id, method, args)
+    return await this.api.account.viewFunction(this.contract_id, method, args)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async callFunction(method: string, args: any, gas = '300000000000000', attachedDeposit: string = undefined) {
-    return await await this.api.account.functionCall({
+    return await this.api.account.functionCall({
       contractId: this.contract_id,
       methodName: method,
       args: args,
