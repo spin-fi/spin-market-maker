@@ -4,6 +4,8 @@ import config from '../configs/config.js'
 import logger from '../logger/index.js'
 import { GridOrders, PerpMarket, PerpBaseCurrency, PerpBalance } from './types.js'
 import BigNumber from 'bignumber.js'
+import BN from 'bn.js'
+
 import {
   convertToDecimals,
   convertWithDecimals,
@@ -68,8 +70,8 @@ export class PerpClient {
       contractId: this.contract_id,
       methodName: method,
       args: args,
-      gas: gas,
-      attachedDeposit: attachedDeposit,
+      gas: new BN(gas),
+      attachedDeposit: new BN(attachedDeposit),
     })
   }
 

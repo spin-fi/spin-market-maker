@@ -84,7 +84,8 @@ export const GridBot = async () => {
 
   async function priceLoop() {
     async function execution() {
-      const newPrice = await getLastPrice()
+      const spinMarket = await SpinClient.getMarket()
+      const newPrice = await getLastPrice(spinMarket)
 
       if (numbDiff(lastPrice, newPrice) >= priceChangeTrigger && !placingInProgress) {
         logger.info(`Last price: ${lastPrice.toFixed(4)}, new price: ${newPrice.toFixed(4)}`)
@@ -115,7 +116,8 @@ export const GridBot = async () => {
       const bids = orders.filter((o) => o.o_type === USide.Bid)
 
       if ((asks.length <= triggerNumber || bids.length <= triggerNumber) && !placingInProgress) {
-        const currentPrice = await getLastPrice()
+        const spinMarket = await SpinClient.getMarket()
+        const currentPrice = await getLastPrice(spinMarket)
         await orderPlacing('New levels trigger event', currentPrice)
       }
     }
@@ -137,7 +139,8 @@ export const GridBot = async () => {
         .toNumber()
 
       if ((asksPercent <= triggerNumber || bidsPercent <= triggerNumber) && !placingInProgress) {
-        const currentPrice = await getLastPrice()
+        const spinMarket = await SpinClient.getMarket()
+        const currentPrice = await getLastPrice(spinMarket)
         await orderPlacing('New percent trigger event', currentPrice)
       }
     }

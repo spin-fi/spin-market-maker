@@ -71,6 +71,14 @@ export class Client {
     }
   }
 
+  async getMarket(): Promise<Market> {
+    if (!this.market) {
+      await this.setMarket()
+    }
+
+    return this.market
+  }
+
   async getOrders(): Promise<Order[]> {
     try {
       return await this.spin.getOrders({
