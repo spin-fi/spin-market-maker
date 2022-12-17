@@ -3,8 +3,6 @@ import { PerpClient } from '../client/perp.js'
 import { getLastPrice } from '../price/index.js'
 import config from '../configs/config.js'
 import { calculateGridOrders, numbDiff } from '../client/utils.js'
-import { USide } from '@spinfi/core'
-import BigNumber from 'bignumber.js'
 
 export const PerpGridBot = async () => {
   const SpinClient = new PerpClient()
@@ -15,7 +13,6 @@ export const PerpGridBot = async () => {
   const triggerCheckInterval = Math.abs(config.get('trigger.trigger_check_interval'))
   const levels = Math.abs(config.get('grid.levels'))
   const levelsTriggerCount = Math.abs(config.get('trigger.levels_trigger'))
-  const percentTriggerCount = Math.abs(config.get('trigger.percent_trigger'))
 
   let lastPrice = 0
   let placingInProgress = false
@@ -30,10 +27,6 @@ export const PerpGridBot = async () => {
 
   if (levelsTriggerCount > levels) {
     throw new Error('trigger.levels_trigger must must be less than or equal to grid.levels.')
-  }
-
-  if (percentTriggerCount <= 0) {
-    throw new Error('trigger.percent_trigger must be above zero.')
   }
 
   if (!Number.isSafeInteger(levelsTriggerCount)) {
@@ -104,34 +97,12 @@ export const PerpGridBot = async () => {
     async function levelsTriggerExecution() {
       const triggerNumber = levels - levelsTriggerCount
       const orders = await SpinClient.getOrders()
-      const asks = orders.filter((o) => o.o_type === USide.Ask)
-      const bids = orders.filter((o) => o.o_type === USide.Bid)
+      const asks = orders.filter((o) => o.o_type === 'Ask')
+      const bids = orders.filter((o) => o.o_type === 'Bid')
 
       if ((asks.length <= triggerNumber || bids.length <= triggerNumber) && !placingInProgress) {
         const currentPrice = await getLastPrice()
         await orderPlacing('New levels trigger event', currentPrice)
-      }
-    }
-
-    async function percentTriggerExecution() {
-      const triggerNumber = 1 - percentTriggerCount
-      const orders = await SpinClient.getOrders()
-      const asks = orders.filter((o) => o.o_type === USide.Ask)
-      const bids = orders.filter((o) => o.o_type === USide.Bid)
-
-      const asksPercent = asks
-        .reduce((acc, obj) => acc.plus(new BigNumber(obj.remaining)), new BigNumber(0))
-        .dividedBy(asks.reduce((acc, obj) => acc.plus(new BigNumber(obj.quantity)), new BigNumber(0)))
-        .toNumber()
-
-      const bidsPercent = bids
-        .reduce((acc, obj) => acc.plus(new BigNumber(obj.remaining)), new BigNumber(0))
-        .dividedBy(bids.reduce((acc, obj) => acc.plus(new BigNumber(obj.quantity)), new BigNumber(0)))
-        .toNumber()
-
-      if ((asksPercent <= triggerNumber || bidsPercent <= triggerNumber) && !placingInProgress) {
-        const currentPrice = await getLastPrice()
-        await orderPlacing('New percent trigger event', currentPrice)
       }
     }
 
@@ -144,16 +115,6 @@ export const PerpGridBot = async () => {
         await levelsTriggerExecution()
         setInterval(async () => await levelsTriggerExecution(), triggerCheckInterval)
         break
-
-      case 'percent':
-        logger.info(`Watching PERCENT CHANGE >= ${percentTriggerCount}`)
-
-        if (levels > 1) {
-          throw new Error('Percent works with 1 level only (for now).')
-        }
-
-        await percentTriggerExecution()
-        setInterval(async () => await percentTriggerExecution(), triggerCheckInterval)
     }
   }
 

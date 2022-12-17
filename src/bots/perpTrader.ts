@@ -1,7 +1,6 @@
 import logger from '../logger/index.js'
 import { PerpClient } from '../client/perp.js'
 import config from '../configs/config.js'
-import { USide } from '@spinfi/core'
 import { convertToDecimals, convertWithDecimals, getFixedPoint, randomFloat } from '../client/utils.js'
 import BigNumber from 'bignumber.js'
 
@@ -10,11 +9,13 @@ export const PerpTraderBot = async () => {
   const tradeStyle = config.get('trader.trade_style')
   const minTradeSize = config.get('trader.trade_min_size')
   const maxTradeSize = config.get('trader.trade_max_size')
-  const sideMap = new Map([
-    [true, USide.Ask],
-    [false, USide.Bid],
+
+  const sideMap: Map<boolean, 'Ask' | 'Bid'> = new Map([
+    [true, 'Ask'],
+    [false, 'Bid'],
   ])
-  const obMap = new Map([
+
+  const obMap: Map<boolean, 'bid_orders' | 'ask_orders'> = new Map([
     [true, 'bid_orders'],
     [false, 'ask_orders'],
   ])
@@ -22,7 +23,7 @@ export const PerpTraderBot = async () => {
   let placingInProgress = false
   let tradeAlternateSide = true
 
-  async function orderPlacing(trigger_event: string, price: number, size: number, side: USide) {
+  async function orderPlacing(trigger_event: string, price: number, size: number, side: 'Bid' | 'Ask') {
     logger.info('')
     logger.info(trigger_event)
     logger.info(`${side} ${convertWithDecimals(price)}@${size} order placing...`)

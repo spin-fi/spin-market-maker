@@ -1,11 +1,14 @@
 import logger from '../logger/index.js'
 import { Client } from '../client/index.js'
+import { PerkClient } from '../client/perk.js'
 import { getLastPrice } from '../price/index.js'
 import config from '../configs/config.js'
-import { calculateGridOrders, numbDiff } from '../client/utils.js'
-import { USide } from '@spinfi/core'
-import BigNumber from 'bignumber.js'
+import { calculateGridOrders, convertToDecimals, convertWithDecimals, numbDiff } from '../client/utils.js'
+import { Balance } from '../client/types.js'
 
+const x = true
+
+const perkRebalancer = new PerkClient()
 export const GridBot = async () => {
   const SpinClient = new Client()
   const priceChangeTrigger = config.get('price.trigger')
@@ -16,7 +19,10 @@ export const GridBot = async () => {
   const triggerCheckInterval = Math.abs(config.get('trigger.trigger_check_interval'))
   const levels = Math.abs(config.get('grid.levels'))
   const levelsTriggerCount = Math.abs(config.get('trigger.levels_trigger'))
-  const percentTriggerCount = Math.abs(config.get('trigger.percent_trigger'))
+  const rebalanceEnable = config.get('rebalance.enable')
+  const rebalanceFromBase = Math.abs(config.get('rebalance.from_base'))
+  const rebalanceFromQuote = Math.abs(config.get('rebalance.from_quote'))
+  const rebalanceCheckInterval = Math.abs(config.get('rebalance.rebalance_check_interval'))
 
   let lastPrice = 0
   let placingInProgress = false
@@ -33,10 +39,6 @@ export const GridBot = async () => {
     throw new Error('trigger.levels_trigger must must be less than or equal to grid.levels.')
   }
 
-  if (percentTriggerCount <= 0) {
-    throw new Error('trigger.percent_trigger must be above zero.')
-  }
-
   if (!Number.isSafeInteger(levelsTriggerCount)) {
     throw new Error('trigger.levels_trigger must be integer.')
   }
@@ -50,7 +52,7 @@ export const GridBot = async () => {
       await SpinClient.cancelAllOrders()
     }
 
-    const balances = await SpinClient.getbalances(true)
+    const balances = await SpinClient.getBalances(true)
 
     const baseSize =
       maxBase === 0
@@ -76,7 +78,13 @@ export const GridBot = async () => {
       SpinClient.min_quote_size,
     )
 
-    config.get('batched') ? await SpinClient.cancelAndBatchOpsPlacing(orders) : await SpinClient.batchOpsPlacing(orders)
+    try {
+      config.get('batched')
+        ? await SpinClient.cancelAndBatchOpsPlacing(orders)
+        : await SpinClient.batchOpsPlacing(orders)
+    } catch (error) {
+      logger.error('Error during batchOps')
+    }
 
     logger.info('Orders placed. Waiting for the triggers...')
     placingInProgress = false
@@ -98,7 +106,7 @@ export const GridBot = async () => {
         )
 
         lastPrice = newPrice
-        await orderPlacing('New price trigger event', newPrice)
+        if (x) await orderPlacing('New price trigger event', newPrice)
       }
     }
     await execution()
@@ -112,36 +120,13 @@ export const GridBot = async () => {
     async function levelsTriggerExecution() {
       const triggerNumber = levels - levelsTriggerCount
       const orders = await SpinClient.getOrders()
-      const asks = orders.filter((o) => o.o_type === USide.Ask)
-      const bids = orders.filter((o) => o.o_type === USide.Bid)
+      const asks = orders.filter((o) => o.o_type === 'Ask')
+      const bids = orders.filter((o) => o.o_type === 'Bid')
 
       if ((asks.length <= triggerNumber || bids.length <= triggerNumber) && !placingInProgress) {
         const spinMarket = await SpinClient.getMarket()
         const currentPrice = await getLastPrice(spinMarket)
-        await orderPlacing('New levels trigger event', currentPrice)
-      }
-    }
-
-    async function percentTriggerExecution() {
-      const triggerNumber = 1 - percentTriggerCount
-      const orders = await SpinClient.getOrders()
-      const asks = orders.filter((o) => o.o_type === USide.Ask)
-      const bids = orders.filter((o) => o.o_type === USide.Bid)
-
-      const asksPercent = asks
-        .reduce((acc, obj) => acc.plus(new BigNumber(obj.remaining)), new BigNumber(0))
-        .dividedBy(asks.reduce((acc, obj) => acc.plus(new BigNumber(obj.quantity)), new BigNumber(0)))
-        .toNumber()
-
-      const bidsPercent = bids
-        .reduce((acc, obj) => acc.plus(new BigNumber(obj.remaining)), new BigNumber(0))
-        .dividedBy(bids.reduce((acc, obj) => acc.plus(new BigNumber(obj.quantity)), new BigNumber(0)))
-        .toNumber()
-
-      if ((asksPercent <= triggerNumber || bidsPercent <= triggerNumber) && !placingInProgress) {
-        const spinMarket = await SpinClient.getMarket()
-        const currentPrice = await getLastPrice(spinMarket)
-        await orderPlacing('New percent trigger event', currentPrice)
+        if (x) await orderPlacing('New levels trigger event', currentPrice)
       }
     }
 
@@ -154,16 +139,78 @@ export const GridBot = async () => {
         await levelsTriggerExecution()
         setInterval(async () => await levelsTriggerExecution(), triggerCheckInterval)
         break
+    }
+  }
 
-      case 'percent':
-        logger.info(`Watching PERCENT CHANGE >= ${percentTriggerCount}`)
+  async function rebalanceLoop() {
+    let rebalanceInProcess = false
 
-        if (levels > 1) {
-          throw new Error('Percent works with 1 level only (for now).')
+    async function rebalance(tokenA: Balance, tokenB: Balance) {
+      rebalanceInProcess = true
+      placingInProgress = true
+
+      logger.info(`Withdrawing ${tokenA.token} ${tokenA.formatted.available}`)
+      await SpinClient.withdraw(tokenA.token, tokenA.native.available)
+
+      const rebalanceTokenBalance = await SpinClient.getTokenBalance(tokenA.token)
+      const route = await perkRebalancer.getRoute({
+        input: tokenA.token === 'near.near' ? 'wrap.near' : tokenA.token,
+        output: tokenB.token === 'near.near' ? 'wrap.near' : tokenB.token,
+        amount:
+          tokenA.token === 'near.near'
+            ? convertToDecimals(convertWithDecimals(rebalanceTokenBalance, tokenA.decimal) - 10, tokenA.decimal)
+            : rebalanceTokenBalance,
+      })
+
+      logger.info(`Swaping ${tokenA.token} —> ${tokenB.token}`)
+      await SpinClient.rebalanceRoute(route)
+
+      if (tokenB.token === 'near.near') {
+        const rebalancedTokenBalance = await SpinClient.getTokenBalance(
+          tokenB.token === 'near.near' ? 'wrap.near' : tokenB.token,
+        )
+        await SpinClient.unwrapNear(rebalancedTokenBalance)
+      }
+
+      let baseTokenBalance = await SpinClient.getTokenBalance(tokenB.token === 'near.near' ? 'near' : tokenB.token)
+
+      baseTokenBalance =
+        tokenB.token === 'near.near'
+          ? convertToDecimals(convertWithDecimals(baseTokenBalance, tokenB.decimal) - 10, tokenB.decimal)
+          : baseTokenBalance
+
+      logger.info(`Depositing ${tokenB.token} ${convertWithDecimals(baseTokenBalance, tokenB.decimal)}`)
+      await SpinClient.deposit(tokenB.token === 'near.near' ? 'near' : tokenB.token, baseTokenBalance)
+    }
+
+    async function rebalanceTriggerExecution() {
+      if (!placingInProgress && !rebalanceInProcess) {
+        const balances = await SpinClient.getBalances(true)
+
+        if (balances.base.formatted.balance >= maxBase + rebalanceFromBase) {
+          logger.info('Base rebalance event!')
+          await rebalance(balances.base, balances.quote)
         }
 
-        await percentTriggerExecution()
-        setInterval(async () => await percentTriggerExecution(), triggerCheckInterval)
+        if (balances.quote.formatted.balance >= maxQuote + rebalanceFromQuote) {
+          logger.info('Quote rebalance event!')
+          await rebalance(balances.quote, balances.base)
+        }
+
+        if (rebalanceInProcess) {
+          rebalanceInProcess = false
+          const spinMarket = await SpinClient.getMarket()
+          const currentPrice = await getLastPrice(spinMarket)
+          if (x) await orderPlacing('New rebalance trigger event', currentPrice)
+          placingInProgress = false
+        }
+      }
+    }
+
+    if (rebalanceEnable) {
+      logger.info(`Rebalance enable!`)
+      await rebalanceTriggerExecution()
+      setInterval(async () => await rebalanceTriggerExecution(), rebalanceCheckInterval)
     }
   }
 
@@ -171,6 +218,7 @@ export const GridBot = async () => {
     await SpinClient.init()
     await priceLoop()
     await triggersLoop()
+    await rebalanceLoop()
   } catch (err) {
     logger.error(err)
     throw err

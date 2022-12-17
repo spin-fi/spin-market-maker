@@ -28,7 +28,7 @@ build/
 # Misc
 .DS_Store
 .env*.local
-config/local.json
+config/local*.json
 .pnp.*
 .yarn/*
 !.yarn/patches

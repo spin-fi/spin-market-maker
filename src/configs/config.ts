@@ -105,7 +105,7 @@ const config = convict({
   trigger: {
     trigger_strategy: {
       doc: 'Additional trigger strategies',
-      format: ['none', 'levels', 'percent'],
+      format: ['none', 'levels'],
       default: 'none',
     },
     levels_trigger: {
@@ -113,13 +113,30 @@ const config = convict({
       format: Number,
       default: 1,
     },
-    percent_trigger: {
-      doc: 'Amount of percent filled, when trigger order placing. Max base + max quote required.',
-      format: Number,
-      default: 0.1, // 10%
-    },
     trigger_check_interval: {
       doc: 'Trigger source check interval',
+      format: Number,
+      default: 5000, // 5 seconds
+    },
+  },
+  rebalance: {
+    enable: {
+      doc: 'Enable rebalancing using Perk Aggregator + Ref',
+      format: Boolean,
+      default: false,
+    },
+    from_base: {
+      doc: 'Minimum amount of base currency to start rebalance process',
+      format: Number,
+      default: 1,
+    },
+    from_quote: {
+      doc: 'Minimum amount of quote currency to start rebalance process',
+      format: Number,
+      default: 1,
+    },
+    rebalance_check_interval: {
+      doc: 'Rebalance check interval',
       format: Number,
       default: 5000, // 5 seconds
     },

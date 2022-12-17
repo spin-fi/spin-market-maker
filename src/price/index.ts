@@ -2,13 +2,13 @@ import config from '../configs/config.js'
 import { WebsocketUpdates } from './ccxws.js'
 import { RefPricer } from './ref-sdk.js'
 import BigNumber from 'bignumber.js'
-import { Market } from '@spinfi/core'
+import { spot } from '@spinfi/core'
 
 const watcher = new WebsocketUpdates()
 const refWatcher = new RefPricer()
 const secondRefWatcher = new RefPricer()
 
-export async function getLastPrice(spinMarket?: Market): Promise<number> {
+export async function getLastPrice(spinMarket?: spot.Market): Promise<number> {
   const priceSource = config.get('price.source')
 
   if (['binance', 'ftx'].includes(priceSource)) {

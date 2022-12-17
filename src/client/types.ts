@@ -10,7 +10,7 @@ interface BalanceInfoFormatted {
   locked_in_orders: number
 }
 
-interface Balance {
+export interface Balance {
   token: string
   decimal: number
   native: BalanceInfoNative
@@ -77,4 +77,23 @@ export type PerpBaseCurrency = {
   decimals: number
   symbol: string
   max_deposit: string
+}
+
+type BatchOpsPlace = {
+  order_type: string
+  price: string
+  quantity: string
+  market_order: boolean
+  time_in_force?: string
+}
+
+type BatchOps = {
+  market_id: number
+  drop: string[]
+  place: BatchOpsPlace[]
+}
+
+export type BatchOpsRequest = {
+  ops: BatchOps[]
+  deadline?: string
 }
