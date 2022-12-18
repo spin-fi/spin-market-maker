@@ -39,7 +39,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@near-wallet-selector/core": "^7.3.0",
+    "@near-wallet-selector/core": "7.3.0",
     "@perk.money/perk-swap-core": "^0.2.85",
     "@ref-finance/ref-sdk": "^1.1.7",
     "@spinfi/core": "^2.1.0",
@@ -56,6 +56,11 @@
     "pino-pretty": "^7.6.1",
     "react": "^18.2.0",
     "reflect-metadata": "^0.1.13"
+  },
+  "overrides": {
+    "@ref-finance/ref-sdk": {
+      "@near-wallet-selector/core": "~7.3.0"
+    }
   },
   "volta": {
     "node": "16.13.0"
