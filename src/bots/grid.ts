@@ -3,7 +3,13 @@ import { Client } from '../client/index.js'
 import { PerkClient } from '../client/perk.js'
 import { getLastPrice } from '../price/index.js'
 import config from '../configs/config.js'
-import { calculateGridOrders, convertToDecimals, convertWithDecimals, numbDiff } from '../client/utils.js'
+import {
+  calculateGridOrders,
+  convertToDecimals,
+  convertWithDecimals,
+  DEFAULT_NEAR_AMOUNT_ON_ACCOUNT,
+  numbDiff,
+} from '../client/utils.js'
 import { Balance } from '../client/types.js'
 
 const x = true
@@ -158,7 +164,10 @@ export const GridBot = async () => {
         output: tokenB.token === 'near.near' ? 'wrap.near' : tokenB.token,
         amount:
           tokenA.token === 'near.near'
-            ? convertToDecimals(convertWithDecimals(rebalanceTokenBalance, tokenA.decimal) - 10, tokenA.decimal)
+            ? convertToDecimals(
+                convertWithDecimals(rebalanceTokenBalance, tokenA.decimal) - DEFAULT_NEAR_AMOUNT_ON_ACCOUNT,
+                tokenA.decimal,
+              )
             : rebalanceTokenBalance,
       })
 
@@ -176,7 +185,10 @@ export const GridBot = async () => {
 
       baseTokenBalance =
         tokenB.token === 'near.near'
-          ? convertToDecimals(convertWithDecimals(baseTokenBalance, tokenB.decimal) - 10, tokenB.decimal)
+          ? convertToDecimals(
+              convertWithDecimals(baseTokenBalance, tokenB.decimal) - DEFAULT_NEAR_AMOUNT_ON_ACCOUNT,
+              tokenB.decimal,
+            )
           : baseTokenBalance
 
       logger.info(`Depositing ${tokenB.token} ${convertWithDecimals(baseTokenBalance, tokenB.decimal)}`)
