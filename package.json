@@ -36,9 +36,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@near-wallet-selector/core": "7.3.0",
+    "@near-wallet-selector/core": "^7.6.1",
     "@perk.money/perk-swap-core": "^0.2.85",
-    "@ref-finance/ref-sdk": "^1.1.7",
+    "@ref-finance/ref-sdk": "^1.1.8",
     "@spinfi/core": "^2.1.0",
     "@spinfi/node": "^2.1.0",
     "@spinfi/shared": "^2.1.0",

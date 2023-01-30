@@ -1,9 +1,9 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@near-wallet-selector/core': 7.3.0
+  '@near-wallet-selector/core': ^7.6.1
   '@perk.money/perk-swap-core': ^0.2.85
-  '@ref-finance/ref-sdk': ^1.1.7
+  '@ref-finance/ref-sdk': ^1.1.8
   '@spinfi/core': ^2.1.0
   '@spinfi/node': ^2.1.0
   '@spinfi/shared': ^2.1.0
@@ -35,7 +35,7 @@ specifiers:
   typescript: ~4.9.4
 
 dependencies:
-  '@near-wallet-selector/core': 7.3.0_near-api-js@1.1.0
+  '@near-wallet-selector/core': 7.6.1_near-api-js@1.1.0
   '@perk.money/perk-swap-core': 0.2.85
   '@ref-finance/ref-sdk': 1.1.8_react@18.2.0
   '@spinfi/core': 2.1.0
@@ -732,8 +732,8 @@ packages:
       - encoding
     dev: false
 
-  /@near-wallet-selector/core/7.3.0_near-api-js@0.44.2:
-    resolution: {integrity: sha512-kmW3/taTfX3KjsXkaAbPtQUYTSpax5HY8aFE/66wlGgmm7PboEOPYys04PkG/f6SJ3UJoTn49Ek87C0eu5hSDA==}
+  /@near-wallet-selector/core/7.6.1_near-api-js@0.44.2:
+    resolution: {integrity: sha512-qFBWdtyZYXMBoIc2rTXKqUWE5mnaqo/7oIDn2qExTFRyRiLiGSe5ak0j5MkS52wNeFVu45FOs2NqszrKTiNyig==}
     peerDependencies:
       near-api-js: ^0.44.2 || ^1.0.0
     dependencies:
@@ -741,8 +741,8 @@ packages:
       rxjs: 7.8.0
     dev: false
 
-  /@near-wallet-selector/core/7.3.0_near-api-js@1.1.0:
-    resolution: {integrity: sha512-kmW3/taTfX3KjsXkaAbPtQUYTSpax5HY8aFE/66wlGgmm7PboEOPYys04PkG/f6SJ3UJoTn49Ek87C0eu5hSDA==}
+  /@near-wallet-selector/core/7.6.1_near-api-js@1.1.0:
+    resolution: {integrity: sha512-qFBWdtyZYXMBoIc2rTXKqUWE5mnaqo/7oIDn2qExTFRyRiLiGSe5ak0j5MkS52wNeFVu45FOs2NqszrKTiNyig==}
     peerDependencies:
       near-api-js: ^0.44.2 || ^1.0.0
     dependencies:
@@ -800,7 +800,7 @@ packages:
     peerDependencies:
       react: '>=16'
     dependencies:
-      '@near-wallet-selector/core': 7.3.0_near-api-js@0.44.2
+      '@near-wallet-selector/core': 7.6.1_near-api-js@0.44.2
       '@react-icons/all-files': 4.1.0_react@18.2.0
       '@types/big.js': 6.1.6
       '@types/bn.js': 5.1.1
@@ -835,7 +835,7 @@ packages:
   /@spinfi/core/2.1.0:
     resolution: {integrity: sha512-Z8yTkMtTfDLZ4HDBvgk43mT99Lar722ztC3PViaXq0W/6oDRD2SFY7l558HCc2Afg2ngnXbmc0/wjdCr921bMg==}
     dependencies:
-      '@near-wallet-selector/core': 7.3.0_near-api-js@0.44.2
+      '@near-wallet-selector/core': 7.6.1_near-api-js@0.44.2
       '@spinfi/number': 1.1.0
       '@spinfi/shared': 2.1.0
       '@spinfi/websocket': 1.0.0
