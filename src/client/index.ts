@@ -1,18 +1,29 @@
-import { createApi, Api } from '@spinfi/node'
-import { Spin, Market, Order, USide } from '@spinfi/core'
+import { createSpotApi, SpotApi } from '@spinfi/node'
+import { spot } from '@spinfi/core'
 import config from '../configs/config.js'
 import logger from '../logger/index.js'
-import { Balances, GridOrders } from './types.js'
+import { Balances, BatchOpsRequest, GridOrders } from './types.js'
 import BigNumber from 'bignumber.js'
-import { convertToDecimals, convertWithDecimals, declOfNum, sumOrdersNative } from './utils.js'
+import { NearClient } from './near.js'
+import {
+  convertToDecimals,
+  convertWithDecimals,
+  declOfNum,
+  DEFAULT_GAS_MAX,
+  getContractId,
+  getDeadline,
+  sumOrdersNative,
+} from './utils.js'
+
+const nearNative = new NearClient()
 
 BigNumber.set({ EXPONENTIAL_AT: 30 })
 
 export class Client {
-  private api: Api
-  private spin: Spin
-  private market: Market
+  private api: SpotApi
+  private market: spot.Market
   private balances: Balances
+  private first_balance_log: boolean
   tick_size: number
   step_size: number
   min_base_size: number
@@ -20,31 +31,37 @@ export class Client {
 
   constructor() {
     this.api
-    this.spin
     this.market
     this.balances
     this.tick_size
     this.step_size
     this.min_base_size
     this.min_quote_size
+    this.first_balance_log = true
   }
 
   async init(): Promise<void> {
-    this.api = await createApi({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    this.api = await createSpotApi({
       // @ts-ignore
       network: config.get('network'),
       accountId: config.get('account_id'),
       privateKey: config.get('private_key'),
+      contractId: getContractId(),
     })
-    this.spin = await this.api.spin
     this.market = await this.setMarket()
+
+    logger.info(
+      `${config.get('network')} | ${getContractId()} | ${config.get('account_id')} | market_id: ${this.market.id} (${
+        this.market.base.symbol
+      }/${this.market.quote.symbol})`,
+    )
+
     this.balances = await this.setBalances()
   }
 
   private async setMarket() {
     try {
-      const market = await this.spin.getMarket({
+      const market = await this.api.spin.getMarket({
         marketId: config.get('grid.market_id'),
       })
 
@@ -71,7 +88,7 @@ export class Client {
     }
   }
 
-  async getMarket(): Promise<Market> {
+  async getMarket(): Promise<spot.Market> {
     if (!this.market) {
       await this.setMarket()
     }
@@ -79,9 +96,10 @@ export class Client {
     return this.market
   }
 
-  async getOrders(): Promise<Order[]> {
+  async getOrders(): Promise<spot.GetOrderResponse[]> {
     try {
-      return await this.spin.getOrders({
+      return await this.api.spin.getOrders({
+        accountId: config.get('account_id'),
         marketId: this.market.id,
       })
     } catch (error) {
@@ -91,7 +109,9 @@ export class Client {
   }
 
   private async setBalances(): Promise<Balances> {
-    const depositsRaw = await this.spin.getDeposits()
+    const depositsRaw = await this.api.spin.getDeposits({
+      accountId: config.get('account_id'),
+    })
     const accountOrders = await this.getOrders()
     const bRaw: Balances = {
       base: {
@@ -105,7 +125,7 @@ export class Client {
         native: {
           available: this.market.base.address in depositsRaw ? depositsRaw[this.market.base.address] : '0',
           balance: '0',
-          locked_in_orders: sumOrdersNative(accountOrders.filter((o) => o.o_type === USide.Ask)),
+          locked_in_orders: sumOrdersNative(accountOrders.filter((o) => o.o_type === 'Ask')),
         },
       },
       quote: {
@@ -120,7 +140,7 @@ export class Client {
           available: this.market.quote.address in depositsRaw ? depositsRaw[this.market.quote.address] : '0',
           balance: '0',
           locked_in_orders: accountOrders
-            .filter((o) => o.o_type === USide.Bid)
+            .filter((o) => o.o_type === 'Bid')
             .reduce(
               (sum, o) =>
                 new BigNumber(sum)
@@ -157,13 +177,16 @@ export class Client {
       available: convertWithDecimals(bRaw.quote.native.available, bRaw.quote.decimal),
       locked_in_orders: convertWithDecimals(bRaw.quote.native.locked_in_orders, bRaw.quote.decimal),
     }
-    logger.info('Current available balance, locked in orders, total: ')
-    logger.info(
-      `${this.market.base.symbol} — ${bRaw.base.formatted.available}, ${bRaw.base.formatted.locked_in_orders}, ${bRaw.base.formatted.balance}`,
-    )
-    logger.info(
-      `${this.market.quote.symbol} — ${bRaw.quote.formatted.available}, ${bRaw.quote.formatted.locked_in_orders}, ${bRaw.quote.formatted.balance}`,
-    )
+    if (this.first_balance_log) {
+      logger.info('Current available balance, locked in orders, total: ')
+      logger.info(
+        `${this.market.base.symbol} — ${bRaw.base.formatted.available}, ${bRaw.base.formatted.locked_in_orders}, ${bRaw.base.formatted.balance}`,
+      )
+      logger.info(
+        `${this.market.quote.symbol} — ${bRaw.quote.formatted.available}, ${bRaw.quote.formatted.locked_in_orders}, ${bRaw.quote.formatted.balance}`,
+      )
+      this.first_balance_log = false
+    }
     return bRaw
   }
 
@@ -175,7 +198,7 @@ export class Client {
     logger.info(`Cancelling ${orders.length} ${declOfNum(ordersLength, ['order', 'orders', 'orders'])}...`)
 
     try {
-      await this.spin.cancelOrders({
+      await this.api.spin.cancelOrders({
         marketId: this.market.id,
       })
       logger.info(`Orders canceled on market #${this.market.id}`)
@@ -186,7 +209,7 @@ export class Client {
     }
   }
 
-  async getbalances(updateBalances = false) {
+  async getBalances(updateBalances = false) {
     if (updateBalances) {
       return await this.setBalances()
     }
@@ -196,34 +219,40 @@ export class Client {
 
   async batchOpsPlacing(orders: GridOrders) {
     const bidOrders = orders.bids.map((o) => ({
-      marketId: this.market.id,
-      orderType: USide.Bid,
+      order_type: 'Bid',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
-      marketOrder: false,
+      market_order: false,
     }))
 
     const askOrders = orders.asks.map((o) => ({
-      marketId: this.market.id,
-      orderType: USide.Ask,
+      order_type: 'Ask',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
-      marketOrder: false,
+      market_order: false,
     }))
 
     logger.info('Placing orders via batchOps')
 
+    const batchOpsArgs: BatchOpsRequest = {
+      ops: [
+        {
+          market_id: this.market.id,
+          drop: [],
+          place: [...bidOrders, ...askOrders],
+        },
+      ],
+    }
+
+    if (config.get('network') === 'testnet') {
+      batchOpsArgs.deadline = getDeadline()
+    }
+
     try {
-      await this.spin.batchOps({
-        ops: [
-          {
-            marketId: this.market.id,
-            drop: [],
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            place: [...bidOrders, ...askOrders],
-          },
-        ],
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: batchOpsArgs,
+        gas: DEFAULT_GAS_MAX,
       })
     } catch (error) {
       logger.error(error)
@@ -234,39 +263,88 @@ export class Client {
   async cancelAndBatchOpsPlacing(orders: GridOrders) {
     const userOrdersRaw = await this.getOrders()
     const userOrdersIds = userOrdersRaw.map((o) => o.id)
+
     const bidOrders = orders.bids.map((o) => ({
-      marketId: this.market.id,
-      orderType: USide.Bid,
+      order_type: 'Bid',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
-      marketOrder: false,
+      market_order: false,
     }))
 
     const askOrders = orders.asks.map((o) => ({
-      marketId: this.market.id,
-      orderType: USide.Ask,
+      order_type: 'Ask',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
-      marketOrder: false,
+      market_order: false,
     }))
 
     logger.info('Canceling and placing orders via batchOps')
 
+    const batchOpsArgs: BatchOpsRequest = {
+      ops: [
+        {
+          market_id: this.market.id,
+          drop: userOrdersIds,
+          place: [...bidOrders, ...askOrders],
+        },
+      ],
+    }
+
+    if (config.get('network') === 'testnet') {
+      batchOpsArgs.deadline = getDeadline()
+    }
+
     try {
-      await this.spin.batchOps({
-        ops: [
-          {
-            marketId: this.market.id,
-            drop: userOrdersIds,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            place: [...bidOrders, ...askOrders],
-          },
-        ],
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: batchOpsArgs,
+        gas: DEFAULT_GAS_MAX,
       })
     } catch (error) {
       logger.error(error)
       throw Error(error)
+    }
+  }
+
+  async deposit(token: string, amount: string) {
+    if (token === 'near.near' || token === 'near') {
+      return await this.api.spin.depositNear({
+        amount: BigInt(amount),
+      })
+    } else {
+      return await this.api.spin.deposit({
+        tokenAddress: token,
+        amount: BigInt(amount),
+      })
+    }
+  }
+
+  async withdraw(token: string, amount: string) {
+    return await this.api.spin.withdraw({
+      tokenAddress: token,
+      amount: BigInt(amount),
+    })
+  }
+
+  async getTokenBalance(token: string) {
+    return await nearNative.getTokenBalance({ contract: token })
+  }
+
+  async unwrapNear(amount: string) {
+    return await nearNative.unwrapNear({ amount: amount })
+  }
+
+  async rebalanceRoute(route: any) {
+    for (const transaction of route.transactions) {
+      for (const action of transaction.actions) {
+        await nearNative.callMethod({
+          contract: transaction.receiverId,
+          method: action.params.methodName,
+          args: action.params.args,
+          gas: action.params.gas,
+          deposit: action.params.deposit,
+        })
+      }
     }
   }
 }

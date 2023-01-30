@@ -1,8 +1,16 @@
 import BigNumber from 'bignumber.js'
 import config from '../configs/config.js'
-import { Order } from '@spinfi/core'
+import { spot } from '@spinfi/core'
 import { GridOrders, SlopePoints } from './types.js'
-import { getPrestable, getStable } from '@spinfi/shared'
+
+export const DEFAULT_GAS = 100000000000000
+export const NO_DEPOSIT = 0
+export const DEFAULT_GAS_MAX = 300000000000000
+export const DEFAULT_GAS_THIRTY = 30000000000000
+export const DEFAULT_NEAR_AMOUNT_ON_ACCOUNT = 12
+// export const DEFAULT_AMOUNT = '1250000000000000000000';
+// export const DEFAULT_DEPOSIT = 1;
+// export const ONE_YOCTO_NEAR = '0.000000000000000000000001';
 
 export function declOfNum(number, words) {
   return words[
@@ -12,11 +20,12 @@ export function declOfNum(number, words) {
 export function convertWithDecimals(value: string | number, decimal: string | number = 24): number {
   return new BigNumber(value).dividedBy(new BigNumber(10).pow(new BigNumber(decimal))).toNumber() || 0
 }
+
 export function convertToDecimals(value: string | number, decimal: string | number = 24): string {
   return new BigNumber(value).multipliedBy(new BigNumber(10).pow(new BigNumber(decimal))).toString() || '0'
 }
 
-export function sumOrdersNative(orders: Order[]): string {
+export function sumOrdersNative(orders: spot.Order[]): string {
   if (!orders.length) {
     return '0'
   }
@@ -131,14 +140,27 @@ export function getContractId(): string {
   const network = config.get('network')
 
   if (market === 'spot') {
-    return network === 'testnet' ? getPrestable().contractId : getStable().contractId
+    if ('SPOT_CONTRACT_ID' in process.env) {
+      return process.env.SPOT_CONTRACT_ID
+    }
+
+    return network === 'testnet' ? 'v1.spot.spin-fi.testnet' : 'spot.spin-fi.near'
   }
 
   if (market === 'perp') {
-    return process.env.PERP_CONTRACT_ID
+    if ('PERP_CONTRACT_ID' in process.env) {
+      return process.env.PERP_CONTRACT_ID
+    }
+
+    return network === 'testnet' ? 'v2_0_2.perp.spin-fi.testnet' : 'v2_0_2.perp.spin-fi.near'
   }
 
-  return getPrestable().contractId
+  return '' // error on initialization
+}
+
+export function getNodeUrl(): string {
+  const network = config.get('network')
+  return network === 'testnet' ? 'https://rpc.testnet.near.org' : 'https://rpc.mainnet.near.org'
 }
 
 export function getDeadline() {

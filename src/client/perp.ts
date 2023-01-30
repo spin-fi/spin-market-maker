@@ -1,26 +1,28 @@
-import { createApi, Api } from '@spinfi/node'
-import { Spin, Order, USide } from '@spinfi/core'
+import { createPerpApi, PerpApi } from '@spinfi/node'
+import { perp } from '@spinfi/core'
 import config from '../configs/config.js'
 import logger from '../logger/index.js'
-import { GridOrders, PerpMarket, PerpBaseCurrency, PerpBalance } from './types.js'
+import { GridOrders, PerpBaseCurrency, PerpBalance, BatchOpsRequest } from './types.js'
+import { NearClient } from './near.js'
 import BigNumber from 'bignumber.js'
-import BN from 'bn.js'
 
 import {
   convertToDecimals,
   convertWithDecimals,
   declOfNum,
+  DEFAULT_GAS_MAX,
   getContractId,
   getDeadline,
   // sumOrdersNative,
 } from './utils.js'
 
+const nearNative = new NearClient()
+
 BigNumber.set({ EXPONENTIAL_AT: 30 })
 
 export class PerpClient {
-  private api: Api
-  private spin: Spin
-  private market: PerpMarket
+  private api: PerpApi
+  private market: perp.Market
   private balances: PerpBalance
   tick_size: number
   step_size: number
@@ -32,7 +34,6 @@ export class PerpClient {
 
   constructor() {
     this.api
-    this.spin
     this.market
     this.balances
     this.tick_size
@@ -44,7 +45,7 @@ export class PerpClient {
   }
 
   async init(): Promise<void> {
-    this.api = await createApi({
+    this.api = await createPerpApi({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       network: config.get('network'),
@@ -54,30 +55,16 @@ export class PerpClient {
     })
 
     this.contract_id = getContractId()
-    this.spin = await this.api.spin
     this.market = await this.setMarket()
     this.balances = await this.setBalances()
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async viewFunction(method: string, args: any) {
-    return await this.api.account.viewFunction(this.contract_id, method, args)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async callFunction(method: string, args: any, gas = '300000000000000', attachedDeposit: string = undefined) {
-    return await this.api.account.functionCall({
-      contractId: this.contract_id,
-      methodName: method,
-      args: args,
-      gas: new BN(gas),
-      attachedDeposit: new BN(attachedDeposit),
-    })
-  }
-
   private async setMarket() {
     try {
-      const market: PerpMarket = await this.viewFunction('get_market', { market_id: config.get('grid.market_id') })
+      const market: perp.Market = await nearNative.viewMethod({
+        method: 'get_market',
+        args: { market_id: config.get('grid.market_id') },
+      })
 
       this.tick_size = convertWithDecimals(market.limits.tick_size, this.decimal)
 
@@ -106,17 +93,20 @@ export class PerpClient {
 
   async getL1() {
     try {
-      return await this.viewFunction('get_orderbook', { market_id: config.get('grid.market_id'), limit: 1 })
+      return await nearNative.viewMethod({
+        method: 'get_orderbook',
+        args: { market_id: config.get('grid.market_id'), limit: 1 },
+      })
     } catch (error) {
       throw Error('Cant load L1 orderbook')
     }
   }
 
-  async getOrders(): Promise<Order[]> {
+  async getOrders(): Promise<perp.GetOrderResponse[]> {
     try {
-      return await this.viewFunction('get_orders', {
-        market_id: this.market.id,
-        account_id: config.get('account_id'),
+      return await this.api.spin.getOrders({
+        marketId: this.market.id,
+        accountId: config.get('account_id'),
       })
     } catch (error) {
       logger.error(error)
@@ -125,8 +115,11 @@ export class PerpClient {
   }
 
   private async setBalances(): Promise<PerpBalance> {
-    const baseCurrency: PerpBaseCurrency = await this.viewFunction('get_base_currency', {})
-    const balance: string = await this.viewFunction('get_balance', { account_id: config.get('account_id') })
+    const baseCurrency: PerpBaseCurrency = await nearNative.viewMethod({ method: 'get_base_currency' })
+    const balance: string = await nearNative.viewMethod({
+      method: 'get_balance',
+      args: { account_id: config.get('account_id') },
+    })
     // const accountOrders = await this.getOrders()
 
     const bRaw: PerpBalance = {
@@ -141,7 +134,7 @@ export class PerpClient {
         native: {
           available: balance,
           balance: '0',
-          // locked_in_orders: sumOrdersNative(accountOrders.filter((o) => o.o_type === USide.Ask)),
+          // locked_in_orders: sumOrdersNative(accountOrders.filter((o) => o.o_type === 'Ask')),
           locked_in_orders: '0',
         },
       },
@@ -157,7 +150,7 @@ export class PerpClient {
       //     available: this.market.quote.address in depositsRaw ? depositsRaw[this.market.quote.address] : '0',
       //     balance: '0',
       //     locked_in_orders: accountOrders
-      //       .filter((o) => o.o_type === USide.Bid)
+      //       .filter((o) => o.o_type === 'Bid')
       //       .reduce(
       //         (sum, o) =>
       //           new BigNumber(sum)
@@ -206,10 +199,11 @@ export class PerpClient {
     logger.info(`Cancelling ${orders.length} ${declOfNum(ordersLength, ['order', 'orders', 'orders'])}...`)
 
     try {
-      await this.callFunction('cancel_orders', {
-        market_id: this.market.id,
+      await this.api.spin.cancelOrders({
+        marketId: this.market.id,
         deadline: getDeadline(),
       })
+
       logger.info(`Orders canceled on market #${this.market.id}`)
     } catch (error) {
       logger.error(error, `Error with cancelling orders on market #${this.market.id}`)
@@ -228,14 +222,14 @@ export class PerpClient {
 
   async batchOpsPlacing(orders: GridOrders) {
     const bidOrders = orders.bids.map((o) => ({
-      order_type: USide.Bid,
+      order_type: 'Bid',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
     }))
 
     const askOrders = orders.asks.map((o) => ({
-      order_type: USide.Ask,
+      order_type: 'Ask',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
@@ -243,18 +237,22 @@ export class PerpClient {
 
     logger.info('Placing orders via batchOps')
 
+    const batchOpsArgs: BatchOpsRequest = {
+      ops: [
+        {
+          market_id: this.market.id,
+          drop: [],
+          place: [...bidOrders, ...askOrders],
+        },
+      ],
+      deadline: getDeadline(),
+    }
+
     try {
-      await this.callFunction('batch_ops', {
-        ops: [
-          {
-            market_id: this.market.id,
-            drop: [],
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            place: [...bidOrders, ...askOrders],
-          },
-        ],
-        deadline: getDeadline(),
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: batchOpsArgs,
+        gas: DEFAULT_GAS_MAX,
       })
     } catch (error) {
       logger.error(error)
@@ -266,14 +264,14 @@ export class PerpClient {
     const userOrdersRaw = await this.getOrders()
     const userOrdersIds = userOrdersRaw.map((o) => o.id)
     const bidOrders = orders.bids.map((o) => ({
-      order_type: USide.Bid,
+      order_type: 'Bid',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
     }))
 
     const askOrders = orders.asks.map((o) => ({
-      order_type: USide.Ask,
+      order_type: 'Ask',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
@@ -281,18 +279,22 @@ export class PerpClient {
 
     logger.info('Canceling and placing orders via batchOps')
 
+    const batchOpsArgs: BatchOpsRequest = {
+      ops: [
+        {
+          market_id: this.market.id,
+          drop: userOrdersIds,
+          place: [...bidOrders, ...askOrders],
+        },
+      ],
+      deadline: getDeadline(),
+    }
+
     try {
-      await this.callFunction('batch_ops', {
-        ops: [
-          {
-            market_id: this.market.id,
-            drop: userOrdersIds,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            place: [...bidOrders, ...askOrders],
-          },
-        ],
-        deadline: getDeadline(),
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: batchOpsArgs,
+        gas: DEFAULT_GAS_MAX,
       })
     } catch (error) {
       logger.error(error)
@@ -300,7 +302,7 @@ export class PerpClient {
     }
   }
 
-  async placeMarketOrder(order_type: USide, price: number, quantity: number) {
+  async placeMarketOrder(order_type: 'Bid' | 'Ask', price: number, quantity: number) {
     const order = {
       order_type: order_type,
       price: convertToDecimals(price, this.decimal),
@@ -310,15 +312,18 @@ export class PerpClient {
     }
 
     try {
-      await this.callFunction('batch_ops', {
-        ops: [
-          {
-            market_id: this.market.id,
-            drop: [],
-            place: [order],
-          },
-        ],
-        deadline: getDeadline(),
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: {
+          ops: [
+            {
+              market_id: this.market.id,
+              drop: [],
+              place: [order],
+            },
+          ],
+          deadline: getDeadline(),
+        },
       })
     } catch (error) {
       logger.error(error)

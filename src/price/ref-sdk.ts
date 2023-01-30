@@ -8,7 +8,7 @@ import {
   Pool,
   StablePool,
 } from '@ref-finance/ref-sdk'
-import { Market } from '@spinfi/core'
+import { spot } from '@spinfi/core'
 
 export class RefPricer {
   private initialized: boolean
@@ -21,7 +21,7 @@ export class RefPricer {
   private quoteToken: string
   private baseDecimals: number
   private quoteDecimals: number
-  private spinMarket: Market | null
+  private spinMarket: spot.Market | null
 
   constructor() {
     this.initialized = false
@@ -36,7 +36,7 @@ export class RefPricer {
     this.spinMarket = null
   }
 
-  async init(poolId: number, spinMarket?: Market): Promise<void> {
+  async init(poolId: number, spinMarket?: spot.Market): Promise<void> {
     logger.info(`Connected to Ref.Finance`)
     this.initialized = true
     this.poolId = Math.abs(poolId)
@@ -89,7 +89,7 @@ export class RefPricer {
     }
   }
 
-  async getPrice(poolId: number, spinMarket: Market): Promise<number> {
+  async getPrice(poolId: number, spinMarket: spot.Market): Promise<number> {
     if (!this.initialized) {
       await this.init(poolId, spinMarket)
     }
