@@ -3,10 +3,7 @@
   "version": "0.1.0",
   "description": "Spin Market Maker example using Spin SDK",
   "type": "module",
-  "packageManager": "yarn@3.2.4",
-  "engines": {
-    "node": ">= 16.13 <17"
-  },
+  "packageManager": "pnpm@7.26.1",
   "devDependencies": {
     "@types/convict": "^6.1.1",
     "@types/jest": "~29.2.4",
