@@ -21,9 +21,11 @@ export class WebsocketUpdates {
   init(): void {
     const source = config.get('price.source').toLowerCase()
     const sourceTicker = config.get('price.source_ticker').toUpperCase()
-    const market = config.get('market')
-    const marketType = market === 'spot' ? 'spot' : 'futures'
-    const ticker = sourceTicker.split(market === 'spot' ? '/' : '-')
+    // const market = config.get('market')
+    // const marketType = market === 'spot' ? 'spot' : 'futures'
+    const marketType = 'spot'
+    // const ticker = sourceTicker.split(market === 'spot' ? '/' : '-')
+    const ticker = sourceTicker.split('/')
     const base = ticker[0]
     const quote = ticker[1]
 
@@ -33,7 +35,8 @@ export class WebsocketUpdates {
         break
 
       case 'binance':
-        this.client = market === 'spot' ? new BinanceClient() : new BinanceFuturesUsdtmClient()
+        // this.client = market === 'spot' ? new BinanceClient() : new BinanceFuturesUsdtmClient()
+        this.client = new BinanceClient()
         break
     }
 
