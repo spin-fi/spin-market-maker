@@ -1,11 +1,11 @@
-import { Ticker, BinanceClient, FtxClient, BinanceFuturesUsdtmClient } from 'ccxws'
+import { Ticker, BinanceClient, FtxClient, BinanceFuturesUsdtmClient, KucoinClient } from 'ccxws'
 import { sleep } from '../client/utils.js'
 import config from '../configs/config.js'
 import logger from '../logger/index.js'
 
 export class WebsocketUpdates {
   private price: number
-  private client: FtxClient | BinanceClient | BinanceFuturesUsdtmClient
+  private client: FtxClient | BinanceClient | BinanceFuturesUsdtmClient | KucoinClient
   private initialized: boolean
 
   constructor() {
@@ -38,6 +38,10 @@ export class WebsocketUpdates {
         // this.client = market === 'spot' ? new BinanceClient() : new BinanceFuturesUsdtmClient()
         this.client = new BinanceClient()
         break
+
+      case 'kucoin':
+        this.client = new KucoinClient()
+        break
     }
 
     this.client.on('connected', () => logger.info(`Connected to ${source.toUpperCase()} — ${sourceTicker} websocket`))
@@ -47,7 +51,7 @@ export class WebsocketUpdates {
     this.client.on('ticker', async (ticker: Ticker) => this.setPrice(+ticker.last))
 
     this.client.subscribeTicker({
-      id: source === 'ftx' ? sourceTicker : sourceTicker.replace('/', ''),
+      id: source === 'kucoin' ? sourceTicker.replace('/', '-') : sourceTicker.replace('/', ''),
       base: base,
       quote: quote,
       type: marketType,

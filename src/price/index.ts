@@ -11,14 +11,13 @@ const secondRefWatcher = new RefPricer()
 export async function getLastPrice(spinMarket?: spot.Market): Promise<number> {
   const priceSource = config.get('price.source')
 
-  if (['binance', 'ftx'].includes(priceSource)) {
+  if (['binance', 'ftx', 'kucoin'].includes(priceSource)) {
     return await watcher.getPrice()
   }
 
   if (priceSource === 'ref') {
     const poolId = +config.get('price.source_ticker').split(', ')[0]
     const secondPoolId = +config.get('price.source_ticker').split(', ')[1] || 0
-
     if (!secondPoolId) {
       return await refWatcher.getPrice(poolId, spinMarket)
     } else {
