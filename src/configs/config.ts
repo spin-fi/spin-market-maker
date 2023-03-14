@@ -83,7 +83,7 @@ const config = convict({
   price: {
     source: {
       doc: 'Price source for watching',
-      format: ['binance', 'ftx', 'ref', 'jumbo', 'kucoin'],
+      format: ['ref', 'binance', 'kucoin', 'okx'],
       default: 'binance',
     },
     source_ticker: {

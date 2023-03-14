@@ -44,7 +44,7 @@
     "@spinfi/shared": "^2.1.0",
     "bignumber.js": "^9.1.1",
     "bn.js": "^5.2.1",
-    "ccxws": "^0.47.0",
+    "ccxt": "^3.0.4",
     "convict": "^6.2.3",
     "dotenv-flow": "^3.2.0",
     "jsbi": "^4.3.0",
