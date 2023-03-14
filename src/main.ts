@@ -4,6 +4,7 @@ import logger from './logger/index.js'
 import config from './configs/config.js'
 import { GridBot } from './bots/grid.js'
 import { PerpGridBot } from './bots/perpGrid.js'
+import { SpotTraderBot } from './bots/spotTrader.js'
 import { PerpTraderBot } from './bots/perpTrader.js'
 
 dotenvFlow.config()
@@ -28,10 +29,12 @@ const bootstrap = async () => {
     switch (config.get('market')) {
       case 'spot':
         if (config.get('trader.enable')) {
-          throw new Error('Not implemented')
+          logger.info('Starting Spot Trader Bot')
+          await SpotTraderBot()
+        } else {
+          logger.info('Starting Spot Grid Bot')
+          await GridBot()
         }
-        logger.info('Starting Spot Grid Bot')
-        await GridBot()
         break
       case 'perp':
         if (config.get('trader.enable')) {

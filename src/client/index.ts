@@ -108,6 +108,17 @@ export class Client {
     }
   }
 
+  async getL1() {
+    try {
+      return await nearNative.viewMethod({
+        method: 'get_orderbook',
+        args: { market_id: config.get('grid.market_id'), limit: 1 },
+      })
+    } catch (error) {
+      throw Error('Cant load L1 orderbook')
+    }
+  }
+
   private async setBalances(): Promise<Balances> {
     const depositsRaw = await this.api.spin.getDeposits({
       accountId: config.get('account_id'),
@@ -345,6 +356,34 @@ export class Client {
           deposit: action.params.deposit,
         })
       }
+    }
+  }
+
+  async placeMarketOrder(order_type: 'Bid' | 'Ask', price: number, quantity: number) {
+    const order = {
+      order_type: order_type,
+      price: convertToDecimals(price, this.market.quote.decimal),
+      quantity: convertToDecimals(quantity, this.market.base.decimal),
+      market_order: false,
+    }
+
+    try {
+      await nearNative.callMethod({
+        method: 'batch_ops',
+        args: {
+          ops: [
+            {
+              market_id: this.market.id,
+              drop: [],
+              place: [order],
+            },
+          ],
+          deadline: getDeadline(),
+        },
+      })
+    } catch (error) {
+      logger.error(error)
+      throw Error(error)
     }
   }
 }
