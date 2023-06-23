@@ -79,8 +79,8 @@ export type PerpBaseCurrency = {
   max_deposit: string
 }
 
-type BatchOpsPlace = {
-  order_type: string
+export type BatchOpsPlace = {
+  side: 'Ask' | 'Bid'
   price: string
   quantity: string
   market_order: boolean

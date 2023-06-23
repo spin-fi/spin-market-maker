@@ -2,7 +2,7 @@ import { createSpotApi, SpotApi } from '@spinfi/node'
 import { spot } from '@spinfi/core'
 import config from '../configs/config.js'
 import logger from '../logger/index.js'
-import { Balances, BatchOpsRequest, GridOrders } from './types.js'
+import { Balances, BatchOpsPlace, BatchOpsRequest, GridOrders } from './types.js'
 import BigNumber from 'bignumber.js'
 import { NearClient } from './near.js'
 import {
@@ -229,15 +229,15 @@ export class Client {
   }
 
   async batchOpsPlacing(orders: GridOrders) {
-    const bidOrders = orders.bids.map((o) => ({
-      order_type: 'Bid',
+    const bidOrders: BatchOpsPlace[] = orders.bids.map((o) => ({
+      side: 'Bid',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
       market_order: false,
     }))
 
-    const askOrders = orders.asks.map((o) => ({
-      order_type: 'Ask',
+    const askOrders: BatchOpsPlace[] = orders.asks.map((o) => ({
+      side: 'Ask',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
       market_order: false,
@@ -275,15 +275,15 @@ export class Client {
     const userOrdersRaw = await this.getOrders()
     const userOrdersIds = userOrdersRaw.map((o) => o.id)
 
-    const bidOrders = orders.bids.map((o) => ({
-      order_type: 'Bid',
+    const bidOrders: BatchOpsPlace[] = orders.bids.map((o) => ({
+      side: 'Bid',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
       market_order: false,
     }))
 
-    const askOrders = orders.asks.map((o) => ({
-      order_type: 'Ask',
+    const askOrders: BatchOpsPlace[] = orders.asks.map((o) => ({
+      side: 'Ask',
       price: convertToDecimals(o.price, this.market.quote.decimal),
       quantity: convertToDecimals(o.size, this.market.base.decimal),
       market_order: false,
@@ -359,9 +359,9 @@ export class Client {
     }
   }
 
-  async placeMarketOrder(order_type: 'Bid' | 'Ask', price: number, quantity: number) {
+  async placeMarketOrder(side: 'Bid' | 'Ask', price: number, quantity: number) {
     const order = {
-      order_type: order_type,
+      side: side,
       price: convertToDecimals(price, this.market.quote.decimal),
       quantity: convertToDecimals(quantity, this.market.base.decimal),
       market_order: false,

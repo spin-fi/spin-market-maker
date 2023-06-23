@@ -2,7 +2,7 @@ import { createPerpApi, PerpApi } from '@spinfi/node'
 import { perp } from '@spinfi/core'
 import config from '../configs/config.js'
 import logger from '../logger/index.js'
-import { GridOrders, PerpBaseCurrency, PerpBalance, BatchOpsRequest } from './types.js'
+import { GridOrders, PerpBaseCurrency, PerpBalance, BatchOpsRequest, BatchOpsPlace } from './types.js'
 import { NearClient } from './near.js'
 import BigNumber from 'bignumber.js'
 
@@ -221,15 +221,15 @@ export class PerpClient {
   }
 
   async batchOpsPlacing(orders: GridOrders) {
-    const bidOrders = orders.bids.map((o) => ({
-      order_type: 'Bid',
+    const bidOrders: BatchOpsPlace[] = orders.bids.map((o) => ({
+      side: 'Bid',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
     }))
 
-    const askOrders = orders.asks.map((o) => ({
-      order_type: 'Ask',
+    const askOrders: BatchOpsPlace[] = orders.asks.map((o) => ({
+      side: 'Ask',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
@@ -263,15 +263,15 @@ export class PerpClient {
   async cancelAndBatchOpsPlacing(orders: GridOrders) {
     const userOrdersRaw = await this.getOrders()
     const userOrdersIds = userOrdersRaw.map((o) => o.id)
-    const bidOrders = orders.bids.map((o) => ({
-      order_type: 'Bid',
+    const bidOrders: BatchOpsPlace[] = orders.bids.map((o) => ({
+      side: 'Bid',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
     }))
 
-    const askOrders = orders.asks.map((o) => ({
-      order_type: 'Ask',
+    const askOrders: BatchOpsPlace[] = orders.asks.map((o) => ({
+      side: 'Ask',
       price: convertToDecimals(o.price, this.decimal),
       quantity: convertToDecimals(o.size, this.decimal),
       market_order: false,
@@ -302,9 +302,9 @@ export class PerpClient {
     }
   }
 
-  async placeMarketOrder(order_type: 'Bid' | 'Ask', price: number, quantity: number) {
-    const order = {
-      order_type: order_type,
+  async placeMarketOrder(side: 'Bid' | 'Ask', price: number, quantity: number) {
+    const order: BatchOpsPlace = {
+      side: side,
       price: convertToDecimals(price, this.decimal),
       quantity: convertToDecimals(quantity, this.decimal),
       market_order: false,
