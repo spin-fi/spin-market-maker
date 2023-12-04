@@ -71,7 +71,12 @@ export function calculateGridOrders(
   minBase: number,
   minQuote: number,
 ): GridOrders {
-  const spread = Math.abs(config.get('grid.spread'))
+  const ask_spread = Math.abs(
+    config.get('grid.ask_spread') === 0 ? config.get('grid.spread') : config.get('grid.ask_spread'),
+  )
+  const bid_spread = Math.abs(
+    config.get('grid.bid_spread') === 0 ? config.get('grid.spread') : config.get('grid.bid_spread'),
+  )
   const levels = Math.abs(config.get('grid.levels'))
   const levelsStep = Math.abs(config.get('grid.levels_step'))
   const sizeReversal = config.get('grid.size_reversal')
@@ -82,9 +87,8 @@ export function calculateGridOrders(
 
   const priceFixedRate = getFixedPoint(tickSize)
   const sizeFixedRate = getFixedPoint(stepSize)
-
-  const halfSpread =
-    (currentPrice / 100) * (spread / 2) < tickSize / 2 ? tickSize / 2 : (currentPrice / 100) * (spread / 2)
+  const askSpread = (currentPrice / 100) * ask_spread < tickSize / 2 ? tickSize / 2 : (currentPrice / 100) * ask_spread
+  const bidSpread = (currentPrice / 100) * bid_spread < tickSize / 2 ? tickSize / 2 : (currentPrice / 100) * bid_spread
 
   const reversalPoints = {
     1: { x: 1, y: 1 + sizeReversal },
@@ -98,19 +102,20 @@ export function calculateGridOrders(
   const bids = []
 
   for (let level = 0; level < levels; level++) {
-    const priceModifier = halfSpread + levelsStep * level
+    const bidPriceModifier = bidSpread + levelsStep * level
+    const askPriceModifier = askSpread + levelsStep * level
 
     const sizeModifier = levels === 1 ? 1 : (level + 1) * reversalIntercept.m + reversalIntercept.b
 
-    const askPrice = Floor(currentPrice + priceModifier, priceFixedRate)
+    const askPrice = Floor(currentPrice + askPriceModifier, priceFixedRate)
     const askSize =
       config.get('market') === 'spot'
         ? Floor(sizeModifier * asksSizer, sizeFixedRate)
-        : Floor((sizeModifier * asksSizer) / (currentPrice + priceModifier), sizeFixedRate)
+        : Floor((sizeModifier * asksSizer) / (currentPrice + askPriceModifier), sizeFixedRate)
     asks.push({ price: askPrice, size: askSize })
 
-    const bidPrice = Floor(currentPrice - priceModifier, priceFixedRate)
-    const bidSize = Floor((sizeModifier * bidsSizer) / (currentPrice - priceModifier), sizeFixedRate)
+    const bidPrice = Floor(currentPrice - bidPriceModifier, priceFixedRate)
+    const bidSize = Floor((sizeModifier * bidsSizer) / (currentPrice - bidPriceModifier), sizeFixedRate)
     bids.push({ price: bidPrice, size: bidSize })
 
     if (askSize < minBase || bidSize < minBase) {
