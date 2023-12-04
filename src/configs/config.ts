@@ -64,6 +64,16 @@ const config = convict({
       format: Number,
       default: 1, // 1%
     },
+    ask_spread: {
+      doc: 'Ask Spread percentage',
+      format: Number,
+      default: 0.5, // 1%
+    },
+    bid_spread: {
+      doc: 'Bid Spread percentage',
+      format: Number,
+      default: 0.5, // 1%
+    },
     levels: {
       doc: 'Amount of levels to be placed for both sides',
       format: Number,
